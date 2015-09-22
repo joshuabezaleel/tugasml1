@@ -61,11 +61,12 @@ public class WekaProcessor {
     }
     
     //Classify
-    public void setFilteredClassifier(Filter filter, Classifier cls) {
+    public void buildFilteredClassifier(Filter filter, Classifier cls) throws Exception {
         FilteredClassifier filtercls = new FilteredClassifier();
         filtercls.setClassifier(cls);
         filtercls.setFilter(filter);
         classifier = filtercls;
+        classifier.buildClassifier(dataset);
     }
     
     public void buildClassifier(Classifier cls) throws Exception {
