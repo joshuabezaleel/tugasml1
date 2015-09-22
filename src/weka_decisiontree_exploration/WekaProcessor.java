@@ -9,12 +9,16 @@ import java.io.File;
 import java.io.IOException;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
+import weka.classifiers.meta.FilteredClassifier;
 import weka.core.Debug.Random;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.converters.CSVLoader;
 import weka.core.converters.ConverterUtils;
 import weka.core.converters.ConverterUtils.DataSource;
+import weka.filters.Filter;
+import weka.filters.SimpleFilter;
+import weka.filters.unsupervised.attribute.Remove;
 
 /**
  *
@@ -22,9 +26,10 @@ import weka.core.converters.ConverterUtils.DataSource;
  */
 public class WekaProcessor {
     //ATTRIBUTES
-    private Instances learning_data;
+    private Instances dataset;
     private Classifier classifier;
     private Random rand;
+    private String data_filepath;
     
     //METHODS
     //Preprocess
@@ -34,40 +39,63 @@ public class WekaProcessor {
         return loader.getDataSet();
     }
     
-    public Instances readDataset(String path) throws Exception {
-        Instances data;
-        if(path.substring(path.length()-4).equalsIgnoreCase(".csv"))
-            data = readFromCSV(path);
-        else
-            data = DataSource.read(path);
-        if(data.classIndex()==-1)
-            data.setClassIndex(data.numAttributes()-1);
-        return data;
+    public void readDataset(String path) throws Exception {
+        if(path.substring(path.length()-4).equalsIgnoreCase(".csv")) {
+            data_filepath = path.substring(0, path.length()-4);
+            dataset = readFromCSV(path);
+        }
+        else {
+            data_filepath = path.substring(0, path.length()-5);
+            dataset = DataSource.read(path);
+        }
+        if(dataset.classIndex()==-1)
+            dataset.setClassIndex(dataset.numAttributes()-1);
     }
     
-    public void inputLearningData(String path) throws Exception {
-        learning_data = readDataset(path);
+    public void removeAttribute(String idxAttr) throws Exception {
+        Remove remove = new Remove();
+        Instances data = new Instances(dataset);
+        remove.setAttributeIndices(idxAttr);
+        remove.setInputFormat(data);
+        dataset = SimpleFilter.useFilter(data, remove);
     }
     
     //Classify
-    public void buildClassifier(Classifier cls) throws Exception {
-        classifier = cls;
-        classifier.buildClassifier(learning_data);
+    public void setFilteredClassifier(Filter filter, Classifier cls) {
+        FilteredClassifier filtercls = new FilteredClassifier();
+        filtercls.setClassifier(cls);
+        filtercls.setFilter(filter);
+        classifier = filtercls;
     }
     
-    public void fullTrainSet_Eval() throws Exception {
-        Evaluation eval = new Evaluation(learning_data);
-        eval.evaluateModel(classifier, learning_data); //use training set
-        System.out.println(eval.toSummaryString("Evaluation results (Full Training)\n", false));
+    public void buildClassifier(Classifier cls) throws Exception {
+        classifier = cls;
+        classifier.buildClassifier(dataset);
+    }
+    
+    // kayaknya masih salah
+    public void percentageSplit_Eval(int percentage) throws Exception {
+        int trainSize = (int) Math.round(dataset.numInstances()* percentage/100);
+        int testSize = dataset.numInstances() - trainSize;
+        Instances train = new Instances(dataset, 0, trainSize);
+        Instances test = new Instances(dataset, trainSize, testSize);
+        Classifier percent_cls = Classifier.makeCopy(classifier);
+        Evaluation eval;
+        
+        percent_cls.buildClassifier(train);
+        eval = new Evaluation(train);
+        eval.evaluateModel(percent_cls, test);
+        //eval.evaluateModel(classifier, dataset); //use training set
+        System.out.println(eval.toSummaryString("Evaluation results (Percentage split)\n", false));
         System.out.println(eval.toClassDetailsString());
         System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
         System.out.println(eval.toMatrixString());
     }
     
     public void nFoldCross_Eval(int folds) throws Exception {
-        Evaluation eval = new Evaluation(learning_data);
+        Evaluation eval = new Evaluation(dataset);
         rand = new Random(1); // cross validation
-        eval.crossValidateModel(classifier, learning_data, folds, rand); //cross validation
+        eval.crossValidateModel(classifier, dataset, folds, rand); //cross validation
         System.out.println(eval.toSummaryString("Evaluation results ("+folds+" fold cross validation)\n", false));
         System.out.println(eval.toClassDetailsString());
         System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
@@ -81,15 +109,13 @@ public class WekaProcessor {
     public void loadModel(String modelPath) throws Exception {
         classifier = (Classifier) SerializationHelper.read(modelPath);
     }
-        
-    public void classifyDataset(String unlabelPath) throws Exception {
-        String path_no_extension = unlabelPath.substring(0, unlabelPath.length()-5);
-        Instances unclassified_dataset = readDataset(unlabelPath);
-        Instances classified_dataset = new Instances(unclassified_dataset);
-        for(int i=0;i< unclassified_dataset.numInstances(); i++) {
-            double clsLabel = classifier.classifyInstance(unclassified_dataset.instance(i));
+    
+    public void classifyDataset() throws Exception {
+        Instances classified_dataset = new Instances(dataset);
+        for(int i=0;i< dataset.numInstances(); i++) {
+            double clsLabel = classifier.classifyInstance(dataset.instance(i));
             classified_dataset.instance(i).setClassValue(clsLabel);
         }
-        ConverterUtils.DataSink.write(path_no_extension+"-labeled.arff", classified_dataset);
+        ConverterUtils.DataSink.write(data_filepath+"-labeled.arff", classified_dataset);
     }
 }

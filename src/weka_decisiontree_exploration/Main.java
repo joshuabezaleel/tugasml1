@@ -6,6 +6,7 @@
 package weka_decisiontree_exploration;
 
 import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.trees.Id3;
 
 /**
  *
@@ -19,13 +20,14 @@ public class Main {
      */
     public static void main(String[] args) throws Exception {
         WekaProcessor processor = new WekaProcessor();
-        processor.inputLearningData("data/data_train/weather.nominal.arff");
-        processor.buildClassifier(new NaiveBayes());
-        processor.fullTrainSet_Eval();
-        processor.nFoldCross_Eval(10);
+        processor.readDataset("data/data_train/weather.nominal.arff");
+        processor.buildClassifier(new Id3());
+        processor.percentageSplit_Eval(66);
+        //processor.nFoldCross_Eval(10);
         processor.saveModel();
         //processor.loadModel("");
-        processor.classifyDataset("data/data_classifying/weather.nominal.arff");
+        //processor.readDataset("data/data_classifying/weather.nominal.arff");
+        //processor.classifyDataset();
     }
     
 }
