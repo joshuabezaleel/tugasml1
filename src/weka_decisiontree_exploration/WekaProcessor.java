@@ -78,6 +78,7 @@ public class WekaProcessor {
     public void percentageSplit_Eval(int percentage) throws Exception {
         int trainSize = (int) Math.round(dataset.numInstances()* percentage/100);
         int testSize = dataset.numInstances() - trainSize;
+        dataset.randomize(new Random(percentage));
         Instances train = new Instances(dataset, 0, trainSize);
         Instances test = new Instances(dataset, trainSize, testSize);
         Classifier percent_cls = Classifier.makeCopy(classifier);
