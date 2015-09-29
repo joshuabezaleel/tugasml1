@@ -70,8 +70,9 @@ public abstract class myC45ClassifierSplitModel {
             else {
                 double probability = 0;
                 for(int i = 0; i < weights.length; i++) {
-                    
+                    probability += weights[i] * dist.prob(idxClass, i);
                 }
+                return probability;
             }
         }
     }
