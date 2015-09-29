@@ -13,19 +13,24 @@ import weka.core.Instances;
  * @author Rakhmatullah Yoga S
  */
 public class myC45NoSplitModel extends myC45ClassifierSplitModel {
-    
+    public myC45NoSplitModel(myDistribution distribution) {
+        dist = distribution;
+        nbSubset = 1;
+    }
+
     @Override
     public void buildClassifier(Instances instances) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        dist = new myDistribution(instances);
+        nbSubset = 1;
     }
 
     @Override
     public double[] getWeights(Instance instance) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return null;
     }
 
     @Override
     public int getSubset(Instance instance) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return 0;
     }
 }

@@ -55,4 +55,24 @@ public abstract class myC45ClassifierSplitModel {
         }
         return instances;
     }
+    public final boolean isValidModel() {
+        return (nbSubset > 0);
+    }
+    public double getClassProbability(int idxClass, Instance instance, int subset) {
+        if(subset > -1) {
+            return dist.prob(idxClass, subset);
+        }
+        else {
+            double [] weights = getWeights(instance);
+            if(weights == null) {
+                return dist.prob(idxClass);
+            }
+            else {
+                double probability = 0;
+                for(int i = 0; i < weights.length; i++) {
+                    
+                }
+            }
+        }
+    }
 }
