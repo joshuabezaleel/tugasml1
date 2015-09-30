@@ -158,26 +158,17 @@ public class myID3 extends Classifier{
         return entropy + Utils.log2(data.numInstances());
     }
     
-    public double classifyInstance(Instance instance) 
-            throws NoSupportForMissingValuesException {
-        System.out.print("clasify Instance \n");
+    public double classifyInstance(Instance instance) throws NoSupportForMissingValuesException {
         if (instance.hasMissingValue()) {
-            throw new NoSupportForMissingValuesException
-        ("Id3: no missing values, "+ "please.");   
+            throw new NoSupportForMissingValuesException("Id3: no missing values, "+ "please.");   
         }
         if (m_Attribute == null) {
             return m_ClassValue;
         } else {
-            return m_Successors[(int) instance.value(m_Attribute)].
-                    classifyInstance(instance);
+            return m_Successors[(int) instance.value(m_Attribute)].classifyInstance(instance);
         }
     }
    
-      /**
-   * Returns default capabilities of the classifier.
-   *
-   * @return      the capabilities of this classifier
-   */
     public Capabilities getCapabilities() {
         Capabilities result = super.getCapabilities();
         result.disableAll();
@@ -191,12 +182,6 @@ public class myID3 extends Classifier{
         return result;
     }
 
-    /**
-     * Builds Id3 decision tree classifier.
-     *
-     * @param data the training data
-     * @exception Exception if classifier can't be built successfully
-     */
     @Override
     public void buildClassifier(Instances data)throws Exception {
 
