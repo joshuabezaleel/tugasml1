@@ -14,12 +14,12 @@ import weka.core.Utils;
  * @author Rakhmatullah Yoga S
  */
 public abstract class myC45ClassifierSplitModel {
-    protected myDistribution dist;
+    public myDistribution dist;
     protected int nbSubset;
     
     public abstract void buildClassifier(Instances instances) throws Exception;
-    public abstract double [] getWeights(Instance instance);
-    public abstract int getSubset(Instance instance) throws Exception;
+    public abstract double [] Weights(Instance instance);
+    public abstract int whichSubset(Instance instance) throws Exception;
     public final int nbSubset() {
         return nbSubset;
     }
@@ -35,8 +35,8 @@ public abstract class myC45ClassifierSplitModel {
         }
         for(int j = 0; j < data.numInstances(); j++) {
             instance = data.instance(j);
-            weights = getWeights(instance);
-            subset = getSubset(instance);
+            weights = Weights(instance);
+            subset = whichSubset(instance);
             if(subset > -1) {
                 instances[subset].add(instance);
             }
@@ -58,12 +58,18 @@ public abstract class myC45ClassifierSplitModel {
     public final boolean isValidModel() {
         return (nbSubset > 0);
     }
+    public myDistribution getDist() {
+        return dist;
+    }
+    public void resetDist(Instances data) throws Exception {
+        dist = new myDistribution(data, this);
+    }
     public double getClassProbability(int idxClass, Instance instance, int subset) {
         if(subset > -1) {
             return dist.prob(idxClass, subset);
         }
         else {
-            double [] weights = getWeights(instance);
+            double [] weights = Weights(instance);
             if(weights == null) {
                 return dist.prob(idxClass);
             }

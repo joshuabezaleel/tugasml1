@@ -25,12 +25,12 @@ public class myC45NoSplitModel extends myC45ClassifierSplitModel {
     }
 
     @Override
-    public double[] getWeights(Instance instance) {
+    public double[] Weights(Instance instance) {
         return null;
     }
 
     @Override
-    public int getSubset(Instance instance) throws Exception {
+    public int whichSubset(Instance instance) throws Exception {
         return 0;
     }
 }

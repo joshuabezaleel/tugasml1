@@ -2,10 +2,11 @@ package weka_decisiontree_exploration.myC45Utils;
 
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.RevisionUtils;
 import weka.core.Utils;
 
 import java.util.Enumeration;
+import weka.classifiers.trees.j48.GainRatioSplitCrit;
+import weka.classifiers.trees.j48.InfoGainSplitCrit;
 
 public class myC45SplitModel extends myC45ClassifierSplitModel{
 
@@ -22,14 +23,14 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
   private static GainRatioSplitCrit gainRatioCrit = new GainRatioSplitCrit();
 
 
-  public C45Split(int attIndex,int minNoObj, double sumOfWeights) {
+  public myC45SplitModel(int attIndex,int minNoObj, double sumOfWeights) {
     m_attIndex = attIndex;
     m_minNoObj = minNoObj;
     m_sumOfWeights = sumOfWeights;
   }
 
   public void buildClassifier(Instances training) throws Exception {
-    m_numSubsets = 0;
+    nbSubset = 0;
     m_splitPoint = Double.MAX_VALUE;
     m_infoGain = 0;
     m_gainRatio = 0;
@@ -48,7 +49,7 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
   }
 
   public final boolean checkModel() {
-    if (m_numSubsets > 0){
+    if (nbSubset > 0){
       return true;
     } else {
       return false;
@@ -77,7 +78,7 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
     double tempValue;
     Instance instance;
     
-    if ((data.attribute(m_attIndex).isNumeric()) && (m_numSubsets > 1)) {
+    if ((data.attribute(m_attIndex).isNumeric()) && (nbSubset > 1)) {
       Enumeration enu = data.enumerateInstances();
       while (enu.hasMoreElements()) {
         instance = (Instance) enu.nextElement();
@@ -94,21 +95,21 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
 
   public final double classProb(int classIndex,Instance instance, int theSubset) throws Exception {
     if (theSubset <= -1) {
-      double [] weights = weights(instance);
+      double [] weights = Weights(instance);
       if (weights == null) {
-        return m_distribution.prob(classIndex);
+        return dist.prob(classIndex);
       } else {
         double prob = 0;
         for (int i = 0; i < weights.length; i++) {
-          prob += weights[i] * m_distribution.prob(classIndex, i);
+          prob += weights[i] * dist.prob(classIndex, i);
         }
         return prob;
       }
     } else {
-      if (Utils.gr(m_distribution.perBag(theSubset), 0)) {
-        return m_distribution.prob(classIndex, theSubset);
+      if (Utils.gr(dist.perBag(theSubset), 0)) {
+        return dist.prob(classIndex, theSubset);
       } else {
-        return m_distribution.prob(classIndex);
+        return dist.prob(classIndex);
       }
     }
   }
@@ -118,21 +119,21 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
     
     Instance instance;
 
-    m_distribution = new Distribution(m_complexityIndex, trainInstances.numClasses());
+    dist = new myDistribution(m_complexityIndex, trainInstances.numClasses());
     
     Enumeration enu = trainInstances.enumerateInstances();
     while (enu.hasMoreElements()) {
       instance = (Instance) enu.nextElement();
       if (!instance.isMissing(m_attIndex))
       {
-        m_distribution.add((int)instance.value(m_attIndex),instance);
+        dist.add((int)instance.value(m_attIndex),instance);
       }
     }
     
-    if (m_distribution.check(m_minNoObj)) {
-      m_numSubsets = m_complexityIndex;
-      m_infoGain = infoGainCrit.splitCritValue(m_distribution,m_sumOfWeights);
-      m_gainRatio = gainRatioCrit.splitCritValue(m_distribution, m_sumOfWeights, m_infoGain);
+    if (dist.check(m_minNoObj)) {
+      nbSubset = m_complexityIndex;
+      m_infoGain = infoGainCrit.splitCritValue(dist,m_sumOfWeights);
+      m_gainRatio = gainRatioCrit.splitCritValue(dist, m_sumOfWeights, m_infoGain);
     }
   }
 
@@ -149,7 +150,7 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
     Instance instance;
     int i;
 
-    m_distribution = new Distribution(2,trainInstances.numClasses());
+    dist = new myDistribution(2,trainInstances.numClasses());
     
     Enumeration enu = trainInstances.enumerateInstances();
     i = 0;
@@ -157,29 +158,28 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
       instance = (Instance) enu.nextElement();
       if (instance.isMissing(m_attIndex))
     break;
-      m_distribution.add(1,instance);
+      dist.add(1,instance);
       i++;
     }
     firstMiss = i;
     
     // minimal instance yang dibutuhkan
-    minSplit =  0.1*(m_distribution.total())/((double)trainInstances.numClasses());
-    if (Utils.smOrEq(minSplit,m_minNoObj)) 
-    {
+    minSplit =  0.1*(dist.total())/((double)trainInstances.numClasses());
+    if (Utils.smOrEq(minSplit,m_minNoObj)) {
       minSplit = m_minNoObj;
     } else {
       if (Utils.gr(minSplit,25)) 
+        minSplit = 25;
     }
-    minSplit = 25;
     
-    defaultEnt = infoGainCrit.oldEnt(m_distribution);
+    defaultEnt = infoGainCrit.oldEnt(dist);
     while (next < firstMiss) {
       if (trainInstances.instance(next-1).value(m_attIndex)+1e-5 < trainInstances.instance(next).value(m_attIndex)) { 
-        m_distribution.shiftRange(1,0,trainInstances,last,next);    
+        dist.shiftRange(1,0,trainInstances,last,next);    
 
-        if (Utils.grOrEq(m_distribution.perBag(0),minSplit) && Utils.grOrEq(m_distribution.perBag(1),minSplit)) {
+        if (Utils.grOrEq(dist.perBag(0),minSplit) && Utils.grOrEq(dist.perBag(1),minSplit)) {
           currentInfoGain = infoGainCrit.
-          splitCritValue(m_distribution, m_sumOfWeights, defaultEnt);
+          splitCritValue(dist, m_sumOfWeights, defaultEnt);
           if (Utils.gr(currentInfoGain,m_infoGain)) {
             m_infoGain = currentInfoGain;
             splitIndex = next-1;
@@ -203,18 +203,18 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
       return;
     }
       
-    m_numSubsets = 2;
+    nbSubset = 2;
     m_splitPoint = (trainInstances.instance(splitIndex+1).value(m_attIndex) + trainInstances.instance(splitIndex).value(m_attIndex))/2;
 
     if (m_splitPoint == trainInstances.instance(splitIndex + 1).value(m_attIndex)) {
       m_splitPoint = trainInstances.instance(splitIndex).value(m_attIndex);
     }
 
-    m_distribution = new Distribution(2,trainInstances.numClasses());
-    m_distribution.addRange(0,trainInstances,0,splitIndex+1);
-    m_distribution.addRange(1,trainInstances,splitIndex+1,firstMiss);
+    dist = new myDistribution(2,trainInstances.numClasses());
+    dist.addRange(0,trainInstances,0,splitIndex+1);
+    dist.addRange(1,trainInstances,splitIndex+1,firstMiss);
 
-    m_gainRatio = gainRatioCrit.splitCritValue(m_distribution, m_sumOfWeights, m_infoGain);
+    m_gainRatio = gainRatioCrit.splitCritValue(dist, m_sumOfWeights, m_infoGain);
   }
 
   public final String leftSide(Instances data) {
@@ -268,21 +268,21 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
         insts.add(data.instance(i));
       }
     }
-    Distribution newD = new Distribution(insts, this);
+    myDistribution newD = new myDistribution(insts, this);
     newD.addInstWithUnknown(data, m_attIndex);
-    m_distribution = newD;
+    dist = newD;
   }
 
-  public final double [] weights(Instance instance) {
+  public final double [] Weights(Instance instance) {
     
     double [] weights;
     int i;
     
     if (instance.isMissing(m_attIndex)) {
-      weights = new double [m_numSubsets];
-      for (i=0;i<m_numSubsets;i++)
+      weights = new double [nbSubset];
+      for (i=0;i<nbSubset;i++)
       {
-        weights [i] = m_distribution.perBag(i)/m_distribution.total();    
+        weights [i] = dist.perBag(i)/dist.total();    
       }
       return weights;
     } else {
