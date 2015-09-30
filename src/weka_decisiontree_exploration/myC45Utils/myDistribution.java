@@ -23,15 +23,15 @@ public class myDistribution {
     private double perClass[];
     private double total;
     
-    public myDistribution(Instances data) {
+    public myDistribution(Instances source) {
         perClassPerBag = new double [1][0];
         perBag = new double [1];
         total = 0;
-        perClass = new double [data.numClasses()];
-        perClassPerBag[0] = new double [data.numClasses()];
-        Enumeration enu = data.enumerateInstances();
+        perClass = new double [source.numClasses()];
+        perClassPerBag[0] = new double [source.numClasses()];
+        Enumeration enu = source.enumerateInstances();
         while (enu.hasMoreElements())
-          add(0,(Instance) enu.nextElement());
+            add(0,(Instance) enu.nextElement());
     }
     public myDistribution(Instances data, myC45ClassifierSplitModel splitModel) throws Exception {
         int index;

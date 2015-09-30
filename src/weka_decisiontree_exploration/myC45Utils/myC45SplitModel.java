@@ -64,10 +64,6 @@ public class myC45SplitModel extends myC45ClassifierSplitModel {
     return m_gainRatio;
   }
 
-  public final void distribution() {
-
-  }
-
   public final int attIndex() {
     return m_attIndex;
   }

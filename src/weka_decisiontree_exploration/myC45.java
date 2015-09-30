@@ -221,9 +221,9 @@ public class myC45 extends Classifier {
             return weight * getLocalModel().getClassProbability(idxClass, instance, -1);
         }
         else {
-            int idxTree = getLocalModel().getSubset(instance);
+            int idxTree = getLocalModel().whichSubset(instance);
             if(idxTree == -1) {
-                double [] weights = getLocalModel().getWeights(instance);
+                double [] weights = getLocalModel().Weights(instance);
                 for(int i = 0; i < successor.length; i++) {
                     if(!successor[i].is_empty) {
                         prob += successor[i].getProbabilities(idxClass, instance, weights[i] * weight);
@@ -276,7 +276,7 @@ public class myC45 extends Classifier {
         sumOfWeights = data.sumOfWeights();
         for(int i = 0; i < data.numAttributes(); i++) {
             if(i != (data).classIndex()) {
-                currentModel[i] = new myC45SplitModel(/*i,2,sumOfWeights*/);
+                currentModel[i] = new myC45SplitModel(i,2,sumOfWeights);
                 currentModel[i].buildClassifier(data);
                 if(currentModel[i].checkModel()) {
                     if(alldata != null) {
@@ -311,7 +311,7 @@ public class myC45 extends Classifier {
         if(Utils.eq(minResult, 0)) {
             return noSplitModel;
         }
-        bestModel.distribution().addInstWithUnknown(data,bestModel.attIndex());
+        bestModel.getDist().addInstWithUnknown(data,bestModel.attIndex());
         if(alldata != null) {
             bestModel.setSplitPoint(alldata);
         }
