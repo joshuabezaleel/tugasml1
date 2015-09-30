@@ -5,8 +5,6 @@ import weka.core.Instances;
 import weka.core.Utils;
 
 import java.util.Enumeration;
-import weka.classifiers.trees.j48.GainRatioSplitCrit;
-import weka.classifiers.trees.j48.InfoGainSplitCrit;
 
 public class myC45SplitModel extends myC45ClassifierSplitModel{
 
@@ -19,8 +17,8 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
   private int m_complexityIndex;  
   private int m_index;            
 
-  private static InfoGainSplitCrit infoGainCrit = new InfoGainSplitCrit();
-  private static GainRatioSplitCrit gainRatioCrit = new GainRatioSplitCrit();
+  //private static InfoGainSplitCrit infoGainCrit = new InfoGainSplitCrit();
+  //private static GainRatioSplitCrit gainRatioCrit = new GainRatioSplitCrit();
 
 
   public myC45SplitModel(int attIndex,int minNoObj, double sumOfWeights) {
