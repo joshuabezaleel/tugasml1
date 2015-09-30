@@ -214,4 +214,16 @@ public class myDistribution {
     public double numIncorrect() {
         return total - numCorrect();
     }
+
+    public int numClasses() {
+        return perClass.length;
+    }
+
+    public int numBags() {
+        return perBag.length;
+    }
+
+    public double perClassPerBag(int bagIndex, int classIndex) {
+        return perClassPerBag[bagIndex][classIndex];
+    }
 }
