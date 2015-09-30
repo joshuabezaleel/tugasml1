@@ -4,9 +4,11 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
 
+import weka_decisiontree_exploration.myC45Utils.myDistribution;
+
 import java.util.Enumeration;
 
-public class myC45SplitModel extends myC45ClassifierSplitModel{
+public class myC45SplitModel extends myC45ClassifierSplitModel {
 
   private int m_attIndex;         
   private int m_minNoObj;         
@@ -130,8 +132,8 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
     
     if (dist.check(m_minNoObj)) {
       nbSubset = m_complexityIndex;
-      m_infoGain = infoGainCrit.splitCritValue(dist,m_sumOfWeights);
-      m_gainRatio = gainRatioCrit.splitCritValue(dist, m_sumOfWeights, m_infoGain);
+      m_infoGain = myDistribution.infoGainSplitCritValue(dist,m_sumOfWeights);
+      m_gainRatio = myDistribution.gainRatioSplitCritValue(dist, m_sumOfWeights, m_infoGain);
     }
   }
 
@@ -170,14 +172,14 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
         minSplit = 25;
     }
     
-    defaultEnt = infoGainCrit.oldEnt(dist);
+    //defaultEnt = myDistribution.oldEnt(dist);
+    defaultEnt = myDistribution.oldEnt(dist);
     while (next < firstMiss) {
       if (trainInstances.instance(next-1).value(m_attIndex)+1e-5 < trainInstances.instance(next).value(m_attIndex)) { 
         dist.shiftRange(1,0,trainInstances,last,next);    
 
         if (Utils.grOrEq(dist.perBag(0),minSplit) && Utils.grOrEq(dist.perBag(1),minSplit)) {
-          currentInfoGain = infoGainCrit.
-          splitCritValue(dist, m_sumOfWeights, defaultEnt);
+          currentInfoGain = myDistribution.infoGainSplitCritValue(dist, m_sumOfWeights, defaultEnt);
           if (Utils.gr(currentInfoGain,m_infoGain)) {
             m_infoGain = currentInfoGain;
             splitIndex = next-1;
@@ -212,7 +214,7 @@ public class myC45SplitModel extends myC45ClassifierSplitModel{
     dist.addRange(0,trainInstances,0,splitIndex+1);
     dist.addRange(1,trainInstances,splitIndex+1,firstMiss);
 
-    m_gainRatio = gainRatioCrit.splitCritValue(dist, m_sumOfWeights, m_infoGain);
+    m_gainRatio = myDistribution.gainRatioSplitCritValue(dist, m_sumOfWeights, m_infoGain);
   }
 
   public final String leftSide(Instances data) {

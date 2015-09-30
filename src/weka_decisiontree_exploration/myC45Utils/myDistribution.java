@@ -6,6 +6,7 @@
 package weka_decisiontree_exploration.myC45Utils;
 
 import java.util.Enumeration;
+import weka.classifiers.trees.j48.Distribution;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
@@ -15,6 +16,7 @@ import weka.core.Utils;
  * @author Rakhmatullah Yoga S
  */
 public class myDistribution {
+    protected static double log2 = Math.log(2);
     
     private double perClassPerBag[][];
     private double perBag[];
@@ -226,4 +228,166 @@ public class myDistribution {
     public double perClassPerBag(int bagIndex, int classIndex) {
         return perClassPerBag[bagIndex][classIndex];
     }
+    
+    //GainRatioSplitCrit
+    public static double gainRatioSplitCritValue(myDistribution bags) {
+
+    double numerator;
+    double denumerator;
+    
+    numerator = oldEnt(bags)-newEnt(bags);
+
+    // Splits with no gain are useless.
+    if (Utils.eq(numerator,0))
+      return Double.MAX_VALUE;
+    denumerator = splitEnt(bags);
+    
+    // Test if split is trivial.
+    if (Utils.eq(denumerator,0))
+      return Double.MAX_VALUE;
+    
+    //  We take the reciprocal value because we want to minimize the
+    // splitting criterion's value.
+    return denumerator/numerator;
+  }
+
+  /**
+   * This method computes the gain ratio in the same way C4.5 does.
+   *
+   * @param bags the distribution
+   * @param totalnoInst the weight of ALL instances
+   * @param numerator the info gain
+   */
+  public static double gainRatioSplitCritValue(myDistribution bags, double totalnoInst,
+				     double numerator){
+    
+    double denumerator;
+    double noUnknown;
+    double unknownRate;
+    int i;
+    
+    // Compute split info.
+    denumerator = splitEnt(bags,totalnoInst);
+        
+    // Test if split is trivial.
+    if (Utils.eq(denumerator,0))
+      return 0;  
+    denumerator = denumerator/totalnoInst;
+
+    return numerator/denumerator;
+  }
+  
+  /**
+   * Help method for computing the split entropy.
+   */
+  public static double splitEnt(myDistribution bags,double totalnoInst){
+    
+    double returnValue = 0;
+    double noUnknown;
+    int i;
+    
+    noUnknown = totalnoInst-bags.total();
+    if (Utils.gr(bags.total(),0)){
+      for (i=0;i<bags.numBags();i++)
+	returnValue = returnValue-logFunc(bags.perBag(i));
+      returnValue = returnValue-logFunc(noUnknown);
+      returnValue = returnValue+logFunc(totalnoInst);
+    }
+    return returnValue;
+  }
+
+    public static double oldEnt(myDistribution bags) {
+        double returnValue = 0;
+        int j;
+
+        for (j=0;j<bags.numClasses();j++)
+            returnValue = returnValue+logFunc(bags.perClass(j));
+        return logFunc(bags.total())-returnValue; 
+    }
+
+    public static double newEnt(myDistribution bags) {
+        double returnValue = 0;
+    int i,j;
+
+    for (i=0;i<bags.numBags();i++){
+      for (j=0;j<bags.numClasses();j++)
+	returnValue = returnValue+logFunc(bags.perClassPerBag(i,j));
+      returnValue = returnValue-logFunc(bags.perBag(i));
+        }
+        return -returnValue;
+    }
+
+    public static double splitEnt(myDistribution bags) {
+        double returnValue = 0;
+        int i;
+
+        for (i=0;i<bags.numBags();i++)
+          returnValue = returnValue+logFunc(bags.perBag(i));
+        return logFunc(bags.total())-returnValue;
+    }
+
+    public static double logFunc(double num) {
+        
+    // Constant hard coded for efficiency reasons
+    if (num < 1e-6)
+      return 0;
+    else
+      return num*Math.log(num)/log2;
+    }
+    
+    //InfoGainSplitCrit
+  public final double infoGainSplitCritValue(myDistribution bags) {
+
+    double numerator;
+        
+    numerator = oldEnt(bags)-newEnt(bags);
+
+    // Splits with no gain are useless.
+    if (Utils.eq(numerator,0))
+      return Double.MAX_VALUE;
+        
+    // We take the reciprocal value because we want to minimize the
+    // splitting criterion's value.
+    return bags.total()/numerator;
+  }
+
+  public static double infoGainSplitCritValue(myDistribution bags, double totalNoInst) {
+    
+    double numerator;
+    double noUnknown;
+    double unknownRate;
+    int i;
+    
+    noUnknown = totalNoInst-bags.total();
+    unknownRate = noUnknown/totalNoInst;
+    numerator = (oldEnt(bags)-newEnt(bags));
+    numerator = (1-unknownRate)*numerator;
+    
+    // Splits with no gain are useless.
+    if (Utils.eq(numerator,0))
+      return 0;
+    
+    return numerator/bags.total();
+  }
+
+
+  public static double infoGainSplitCritValue(myDistribution bags,double totalNoInst,
+                                     double oldEnt) {
+    
+    double numerator;
+    double noUnknown;
+    double unknownRate;
+    int i;
+    
+    noUnknown = totalNoInst-bags.total();
+    unknownRate = noUnknown/totalNoInst;
+    numerator = (oldEnt-newEnt(bags));
+    numerator = (1-unknownRate)*numerator;
+    
+    // Splits with no gain are useless.
+    if (Utils.eq(numerator,0))
+      return 0;
+    
+    return numerator/bags.total();
+  }
 }
