@@ -11,13 +11,8 @@ import weka.core.Capabilities;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.NoSupportForMissingValuesException;
-import weka.core.RevisionUtils;
-import weka.core.TechnicalInformation;
-import weka.core.TechnicalInformationHandler;
 import weka.core.Utils;
 import weka.core.Capabilities.Capability;
-import weka.core.TechnicalInformation.Field;
-import weka.core.TechnicalInformation.Type;
 
 import java.util.Enumeration;
 
@@ -184,7 +179,6 @@ public class myID3 extends Classifier{
 
     @Override
     public void buildClassifier(Instances data)throws Exception {
-
         // can classifier handle the data?
         getCapabilities().testWithFail(data);
         maxClass = maxDataClass(data);

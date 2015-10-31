@@ -74,20 +74,17 @@ public class WekaProcessor {
         classifier.buildClassifier(dataset);
     }
     
-    // kayaknya masih salah
     public void percentageSplit_Eval(int percentage) throws Exception {
         int trainSize = (int) Math.round(dataset.numInstances()* percentage/100);
         int testSize = dataset.numInstances() - trainSize;
-        dataset.randomize(new Random(percentage));
+        dataset.randomize(new Random(1));
         Instances train = new Instances(dataset, 0, trainSize);
         Instances test = new Instances(dataset, trainSize, testSize);
         Classifier percent_cls = Classifier.makeCopy(classifier);
         Evaluation eval;
-        
         percent_cls.buildClassifier(train);
         eval = new Evaluation(train);
         eval.evaluateModel(percent_cls, test);
-        //eval.evaluateModel(classifier, dataset); //use training set
         System.out.println(eval.toSummaryString("Evaluation results (Percentage split)\n", false));
         System.out.println(eval.toClassDetailsString());
         System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
