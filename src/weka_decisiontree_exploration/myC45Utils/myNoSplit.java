@@ -12,9 +12,10 @@ import weka.core.Instances;
  *
  * @author Rakhmatullah Yoga S
  */
-public class myC45NoSplitModel extends myC45ClassifierSplitModel {
-    public myC45NoSplitModel(myDistribution distribution) {
-        dist = distribution;
+public class myNoSplit extends myClassifierSplitModel {
+
+    public myNoSplit(myDistribution distribution) {
+        dist = new myDistribution(distribution);
         nbSubset = 1;
     }
 
@@ -25,12 +26,13 @@ public class myC45NoSplitModel extends myC45ClassifierSplitModel {
     }
 
     @Override
-    public double[] Weights(Instance instance) {
-        return null;
-    }
-
-    @Override
     public int whichSubset(Instance instance) throws Exception {
         return 0;
     }
+
+    @Override
+    public double[] weights(Instance instance) {
+        return null;
+    }
+    
 }

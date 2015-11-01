@@ -5,72 +5,176 @@
  */
 package weka_decisiontree_exploration.myC45Utils;
 
+import java.io.Serializable;
 import java.util.Enumeration;
-import weka.classifiers.trees.j48.Distribution;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.RevisionHandler;
+import weka.core.RevisionUtils;
 import weka.core.Utils;
 
 /**
  *
- * @author Rakhmatullah Yoga S
+ * @author Rakhmatullah Yoga S, Joshua Bezaleel Abednego, Linda Sekawati
  */
-public class myDistribution {
-    protected static double log2 = Math.log(2);
-    
+public class myDistribution implements Cloneable, Serializable, RevisionHandler {
     private double perClassPerBag[][];
     private double perBag[];
     private double perClass[];
     private double total;
-    
-    public myDistribution(Instances source) {
+
+    public myDistribution(Instances instances) {
         perClassPerBag = new double [1][0];
         perBag = new double [1];
         total = 0;
-        perClass = new double [source.numClasses()];
-        perClassPerBag[0] = new double [source.numClasses()];
-        Enumeration enu = source.enumerateInstances();
+        perClass = new double [instances.numClasses()];
+        perClassPerBag[0] = new double [instances.numClasses()];
+        Enumeration enu = instances.enumerateInstances();
         while (enu.hasMoreElements())
             add(0,(Instance) enu.nextElement());
     }
-    public myDistribution(Instances data, myC45ClassifierSplitModel splitModel) throws Exception {
+
+    public myDistribution(Instances instances, myClassifierSplitModel modelToUse) throws Exception {
         int index;
         Instance instance;
         double[] weights;
-        
-        perClassPerBag = new double [splitModel.nbSubset()][0];
-        perBag = new double [splitModel.nbSubset()];
+
+        perClassPerBag = new double [modelToUse.numSubsets()][0];
+        perBag = new double [modelToUse.numSubsets()];
         total = 0;
-        perClass = new double [data.numClasses()];
-        for (int i = 0; i < splitModel.nbSubset(); i++)
-            perClassPerBag[i] = new double [data.numClasses()];
-        Enumeration enu = data.enumerateInstances();
+        perClass = new double [instances.numClasses()];
+        for (int i = 0; i < modelToUse.numSubsets(); i++)
+            perClassPerBag[i] = new double [instances.numClasses()];
+        Enumeration enu = instances.enumerateInstances();
         while (enu.hasMoreElements()) {
             instance = (Instance) enu.nextElement();
-            index = splitModel.whichSubset(instance);
+            index = modelToUse.whichSubset(instance);
             if (index != -1)
                 add(index, instance);
             else {
-                weights = splitModel.Weights(instance);
+                weights = modelToUse.weights(instance);
                 addWeights(instance, weights);
             }
         }
     }
 
+    public myDistribution(myDistribution toMerge) {
+        total = toMerge.total;
+        perClass = new double [toMerge.numClasses()];
+        System.arraycopy(toMerge.perClass, 0, perClass, 0, toMerge.numClasses());
+        perClassPerBag = new double [1] [0];
+        perClassPerBag[0] = new double [toMerge.numClasses()];
+        System.arraycopy(toMerge.perClass, 0, perClassPerBag[0], 0, toMerge.numClasses());
+        perBag = new double [1];
+        perBag[0] = total;
+    }
+
     public myDistribution(int numBags, int numClasses) {
+        int i;
+
         perClassPerBag = new double [numBags][0];
         perBag = new double [numBags];
         perClass = new double [numClasses];
-        for (int i = 0; i < numBags; i++)
+        for (i=0;i<numBags;i++)
             perClassPerBag[i] = new double [numClasses];
         total = 0;
     }
-    public final void shiftRange(int from, int to, Instances source, int startIndex, int lastPlusOne) throws Exception {
+
+    public double numIncorrect() {
+        return total-numCorrect();
+    }
+
+    public int maxBag() {
+        double max;
+        int maxIndex;
+        int i;
+    
+        max = 0;
+        maxIndex = -1;
+        for (i=0; i<perBag.length; i++)
+            if (Utils.grOrEq(perBag[i],max)) {
+                max = perBag[i];
+                maxIndex = i;
+            }
+        return maxIndex;
+    }
+
+    public double total() {
+        return total;
+    }
+
+    public void add(int i, Instance instance) {
+        int classIndex;
+        double weight;
+
+        classIndex = (int)instance.classValue();
+        weight = instance.weight();
+        perClassPerBag[i][classIndex] = perClassPerBag[i][classIndex] + weight;
+        perBag[i] = perBag[i] + weight;
+        perClass[classIndex] = perClass[classIndex] + weight;
+        total = total + weight;
+    }
+
+    public double numCorrect() {
+        return perClass[maxClass()];
+    }
+
+    public int maxClass() {
+        double maxCount = 0;
+        int maxIndex = 0;
+        int i;
+
+        for (i=0; i<perClass.length; i++)
+            if (Utils.gr(perClass[i],maxCount)) {
+                maxCount = perClass[i];
+                maxIndex = i;
+            }
+        return maxIndex;
+    }
+
+    public void addWeights(Instance instance, double[] weights) {
+        int classIndex;
+        int i;
+
+        classIndex = (int)instance.classValue();
+        for (i=0; i<perBag.length;i++) {
+            double weight = instance.weight() * weights[i];
+            perClassPerBag[i][classIndex] = perClassPerBag[i][classIndex] + weight;
+            perBag[i] = perBag[i] + weight;
+            perClass[classIndex] = perClass[classIndex] + weight;
+            total = total + weight;
+        }
+    }
+
+    public double perClass(int maxClass) {
+        return perClass[maxClass];
+    }
+
+    public int numClasses() {
+        return perClass.length;
+    }
+
+    public double perBag(int i) {
+        return perBag[i];
+    }
+
+    public final boolean check(int m_minNoObj) {
+        int counter = 0;
+        int i;
+
+        for (i=0;i<perBag.length;i++)
+            if (Utils.grOrEq(perBag[i], m_minNoObj))
+                counter++;
+        return counter > 1;
+    }
+
+    public void shiftRange(int from, int to, Instances source, int startIndex, int lastPlusOne) {
         int classIndex;
         double weight;
         Instance instance;
-        
-        for (int i = startIndex; i < lastPlusOne; i++) {
+        int i;
+
+        for (i = startIndex; i < lastPlusOne; i++) {
             instance = (Instance) source.instance(i);
             classIndex = (int)instance.classValue();
             weight = instance.weight();
@@ -80,12 +184,14 @@ public class myDistribution {
             perBag[to] += weight;
         }
     }
-    public final void addRange(int bagIndex, Instances source, int startIndex, int lastPlusOne) throws Exception {
+
+    public void addRange(int bagIndex, Instances source, int startIndex, int lastPlusOne) {
         double sumOfWeights = 0;
         int classIndex;
         Instance instance;
-        
-        for (int i = startIndex; i < lastPlusOne; i++) {
+        int i;
+
+        for (i = startIndex; i < lastPlusOne; i++) {
             instance = (Instance) source.instance(i);
             classIndex = (int)instance.classValue();
             sumOfWeights = sumOfWeights+instance.weight();
@@ -95,21 +201,31 @@ public class myDistribution {
         perBag[bagIndex] += sumOfWeights;
         total += sumOfWeights;
     }
-    public final void addInstWithUnknown(Instances source, int attIndex) throws Exception {
+
+    public int numBags() {
+        return perBag.length;
+    }
+
+    public double perClassPerBag(int i, int j) {
+        return perClassPerBag[i][j];
+    }
+
+    public void addInstWithUnknown(Instances data, int attIndex) {
         double [] probs;
         double weight,newWeight;
         int classIndex;
         Instance instance;
-        
+        int j;
+
         probs = new double [perBag.length];
-        for (int j = 0; j < perBag.length;j++) {
+        for (j=0; j<perBag.length; j++) {
             if (Utils.eq(total, 0)) {
                 probs[j] = 1.0 / probs.length;
             } else {
                 probs[j] = perBag[j]/total;
             }
         }
-        Enumeration enu = source.enumerateInstances();
+        Enumeration enu = data.enumerateInstances();
         while (enu.hasMoreElements()) {
             instance = (Instance) enu.nextElement();
             if (instance.isMissing(attIndex)) {
@@ -117,7 +233,7 @@ public class myDistribution {
                 weight = instance.weight();
                 perClass[classIndex] = perClass[classIndex]+weight;
                 total = total+weight;
-                for (int j = 0; j < perBag.length; j++) {
+                for (j = 0; j < perBag.length; j++) {
                     newWeight = probs[j]*weight;
                     perClassPerBag[j][classIndex] = perClassPerBag[j][classIndex]+newWeight;
                     perBag[j] = perBag[j]+newWeight;
@@ -125,269 +241,25 @@ public class myDistribution {
             }
         }
     }
-    public final boolean check(double minNoObj) {
-        int counter = 0;
-        int i;
-        
-        for (i=0;i<perBag.length;i++)
-            if (Utils.grOrEq(perBag[i],minNoObj))
-                counter++;
-        if (counter > 1)
-            return true;
-        else
-            return false;
-    }
-    public final void addWeights(Instance instance, double [] weights) throws Exception {
-        int classIndex;
-        int i;
-        
-        classIndex = (int)instance.classValue();
-        for (i=0;i<perBag.length;i++) {
-            double weight = instance.weight() * weights[i];
-            perClassPerBag[i][classIndex] = perClassPerBag[i][classIndex] + weight;
-            perBag[i] = perBag[i] + weight;
-            perClass[classIndex] = perClass[classIndex] + weight;
-            total += weight;
-        }
-    }
-    
-    public final void add(int idxBag, Instance instance) {
-        int classIndex;
-        double weight;
-        
-        classIndex = (int)instance.classValue();
-        weight = instance.weight();
-        perClassPerBag[idxBag][classIndex] = perClassPerBag[idxBag][classIndex]+weight;
-        perBag[idxBag] = perBag[idxBag]+weight;
-        perClass[classIndex] = perClass[classIndex]+weight;
-        total = total+weight;
-    }
-    public final double perBag(int bagIndex) {
-        return perBag[bagIndex];
-    }
-    public double perClass(int classIndex) {
-        return perClass[classIndex];
-    }
-    public double total() {
-        return total;
-    }
-    public int maxClass() {
-        double maxCount = 0;
-        int maxIndex = 0;
-        int i;
 
-        for (i=0;i<perClass.length;i++)
-          if (Utils.gr(perClass[i],maxCount)) {
-            maxCount = perClass[i];
-            maxIndex = i;
-          }
+    @Override
+    public String getRevision() {
+        return RevisionUtils.extract("$Revision: 1.12 $");
+    }
 
-        return maxIndex;
-    }
-    public int maxBag() {
-        double max;
-        int idxMax;
-        
-        max = 0;
-        idxMax = -1;
-        for (int i = 0; i < perBag.length; i++) {
-            if(Utils.grOrEq(perBag[i], max)) {
-                max = perBag[i];
-                idxMax = i;
-            }
-        }
-        return idxMax;
-    }
-    public double prob(int idxClass) {
-        if(Utils.eq(total, 0))
-            return perClass[idxClass]/total;
-        else
+    public double prob(int classIndex) {
+        if (!Utils.eq(total, 0)) {
+            return perClass[classIndex]/total;
+        } else {
             return 0;
-    }
-    public double prob(int idxClass, int idxInt) {
-        if(Utils.gr(perBag[idxInt], 0))
-            return perClassPerBag[idxInt][idxClass]/perBag[idxInt];
-        else
-            return prob(idxClass);
-    }
-    public double numCorrect() {
-        return perClass[maxClass()];
-    }
-    public double numIncorrect() {
-        return total - numCorrect();
-    }
-
-    public int numClasses() {
-        return perClass.length;
-    }
-
-    public int numBags() {
-        return perBag.length;
-    }
-
-    public double perClassPerBag(int bagIndex, int classIndex) {
-        return perClassPerBag[bagIndex][classIndex];
-    }
-    
-    //GainRatioSplitCrit
-    public static double gainRatioSplitCritValue(myDistribution bags) {
-
-    double numerator;
-    double denumerator;
-    
-    numerator = oldEnt(bags)-newEnt(bags);
-
-    // Splits with no gain are useless.
-    if (Utils.eq(numerator,0))
-      return Double.MAX_VALUE;
-    denumerator = splitEnt(bags);
-    
-    // Test if split is trivial.
-    if (Utils.eq(denumerator,0))
-      return Double.MAX_VALUE;
-    
-    //  We take the reciprocal value because we want to minimize the
-    // splitting criterion's value.
-    return denumerator/numerator;
-  }
-
-  /**
-   * This method computes the gain ratio in the same way C4.5 does.
-   *
-   * @param bags the distribution
-   * @param totalnoInst the weight of ALL instances
-   * @param numerator the info gain
-   */
-  public static double gainRatioSplitCritValue(myDistribution bags, double totalnoInst,
-				     double numerator){
-    
-    double denumerator;
-    double noUnknown;
-    double unknownRate;
-    int i;
-    
-    // Compute split info.
-    denumerator = splitEnt(bags,totalnoInst);
-        
-    // Test if split is trivial.
-    if (Utils.eq(denumerator,0))
-      return 0;  
-    denumerator = denumerator/totalnoInst;
-
-    return numerator/denumerator;
-  }
-  
-  /**
-   * Help method for computing the split entropy.
-   */
-  public static double splitEnt(myDistribution bags,double totalnoInst){
-    
-    double returnValue = 0;
-    double noUnknown;
-    int i;
-    
-    noUnknown = totalnoInst-bags.total();
-    if (Utils.gr(bags.total(),0)){
-      for (i=0;i<bags.numBags();i++)
-	returnValue = returnValue-logFunc(bags.perBag(i));
-      returnValue = returnValue-logFunc(noUnknown);
-      returnValue = returnValue+logFunc(totalnoInst);
-    }
-    return returnValue;
-  }
-
-    public static double oldEnt(myDistribution bags) {
-        double returnValue = 0;
-        int j;
-
-        for (j=0;j<bags.numClasses();j++)
-            returnValue = returnValue+logFunc(bags.perClass(j));
-        return logFunc(bags.total())-returnValue; 
-    }
-
-    public static double newEnt(myDistribution bags) {
-        double returnValue = 0;
-    int i,j;
-
-    for (i=0;i<bags.numBags();i++){
-      for (j=0;j<bags.numClasses();j++)
-	returnValue = returnValue+logFunc(bags.perClassPerBag(i,j));
-      returnValue = returnValue-logFunc(bags.perBag(i));
         }
-        return -returnValue;
     }
 
-    public static double splitEnt(myDistribution bags) {
-        double returnValue = 0;
-        int i;
-
-        for (i=0;i<bags.numBags();i++)
-          returnValue = returnValue+logFunc(bags.perBag(i));
-        return logFunc(bags.total())-returnValue;
-    }
-
-    public static double logFunc(double num) {
-        
-    // Constant hard coded for efficiency reasons
-    if (num < 1e-6)
-      return 0;
-    else
-      return num*Math.log(num)/log2;
+    public double prob(int classIndex, int intIndex) {
+        if (Utils.gr(perBag[intIndex],0))
+            return perClassPerBag[intIndex][classIndex]/perBag[intIndex];
+        else
+            return prob(classIndex);
     }
     
-    //InfoGainSplitCrit
-  public final double infoGainSplitCritValue(myDistribution bags) {
-
-    double numerator;
-        
-    numerator = oldEnt(bags)-newEnt(bags);
-
-    // Splits with no gain are useless.
-    if (Utils.eq(numerator,0))
-      return Double.MAX_VALUE;
-        
-    // We take the reciprocal value because we want to minimize the
-    // splitting criterion's value.
-    return bags.total()/numerator;
-  }
-
-  public static double infoGainSplitCritValue(myDistribution bags, double totalNoInst) {
-    
-    double numerator;
-    double noUnknown;
-    double unknownRate;
-    int i;
-    
-    noUnknown = totalNoInst-bags.total();
-    unknownRate = noUnknown/totalNoInst;
-    numerator = (oldEnt(bags)-newEnt(bags));
-    numerator = (1-unknownRate)*numerator;
-    
-    // Splits with no gain are useless.
-    if (Utils.eq(numerator,0))
-      return 0;
-    
-    return numerator/bags.total();
-  }
-
-
-  public static double infoGainSplitCritValue(myDistribution bags,double totalNoInst,
-                                     double oldEnt) {
-    
-    double numerator;
-    double noUnknown;
-    double unknownRate;
-    int i;
-    
-    noUnknown = totalNoInst-bags.total();
-    unknownRate = noUnknown/totalNoInst;
-    numerator = (oldEnt-newEnt(bags));
-    numerator = (1-unknownRate)*numerator;
-    
-    // Splits with no gain are useless.
-    if (Utils.eq(numerator,0))
-      return 0;
-    
-    return numerator/bags.total();
-  }
 }

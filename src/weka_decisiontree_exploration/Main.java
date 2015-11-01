@@ -5,8 +5,6 @@
  */
 package weka_decisiontree_exploration;
 
-import weka.classifiers.bayes.NaiveBayes;
-import weka.classifiers.trees.Id3;
 import weka.filters.supervised.instance.Resample;
 
 /**
@@ -22,7 +20,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         WekaProcessor processor = new WekaProcessor();
         processor.readDataset("data/data_train/weather.nominal.arff");
-        //processor.buildClassifier(new myID3());
+        //processor.buildClassifier(new myC45());
         processor.buildFilteredClassifier(new Resample(), new myC45());
         processor.percentageSplit_Eval(66);
         //processor.nFoldCross_Eval(10);
