@@ -23,11 +23,11 @@ public class Main {
         //processor.buildClassifier(new myC45());
         processor.buildFilteredClassifier(new Resample(), new myC45());
         processor.percentageSplit_Eval(66);
-        //processor.nFoldCross_Eval(10);
+        processor.nFoldCross_Eval(10);
         processor.saveModel();
-        //processor.loadModel("");
-        //processor.readDataset("data/data_classifying/weather.nominal.arff");
-        //processor.classifyDataset();
+        processor.loadModel("data/model/FilteredClassifier.model");
+        processor.readDataset("data/data_classifying/weather.nominal.arff");
+        processor.classifyDataset();
     }
     
 }
