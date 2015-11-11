@@ -3,17 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package weka_decisiontree_exploration;
+package classifier.decisiontree;
 
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Statistics;
 import weka.core.Utils;
-import weka_decisiontree_exploration.myC45Utils.myClassifierSplitModel;
-import weka_decisiontree_exploration.myC45Utils.myDistribution;
-import weka_decisiontree_exploration.myC45Utils.myModelSelection;
-import weka_decisiontree_exploration.myC45Utils.myNoSplit;
+import classifier.decisiontree.myC45Utils.myClassifierSplitModel;
+import classifier.decisiontree.myC45Utils.myDistribution;
+import classifier.decisiontree.myC45Utils.myModelSelection;
+import classifier.decisiontree.myC45Utils.myNoSplit;
 
 /**
  *

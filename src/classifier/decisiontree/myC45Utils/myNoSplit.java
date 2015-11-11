@@ -3,14 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package weka_decisiontree_exploration.myC45Utils;
+package classifier.decisiontree.myC45Utils;
 
 import weka.core.Instance;
 import weka.core.Instances;
 
 /**
  *
- * @author Rakhmatullah Yoga S
+ * @author Rakhmatullah Yoga S, Joshua Bezaleel Abednego, Linda Sekawati
  */
 public class myNoSplit extends myClassifierSplitModel {
 

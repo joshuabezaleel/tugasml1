@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package weka_decisiontree_exploration;
+package explorer;
 
+import classifier.decisiontree.myC45;
 import weka.filters.supervised.instance.Resample;
 
 /**
