@@ -102,6 +102,9 @@ public class WekaProcessor {
     }
     
     public void saveModel() throws Exception {
+        File file = new File("data/model/");
+        if(!file.exists())
+            file.mkdirs();
         SerializationHelper.write("data/model/"+classifier.getClass().getSimpleName()+".model", classifier);
     }
     
