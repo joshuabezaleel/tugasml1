@@ -20,7 +20,7 @@ import java.util.Enumeration;
  *
  * @author Rakhmatullah Yoga S, Joshua Bezaleel Abednego, Linda Sekawati
  */
-public class myID3 extends Classifier{
+public class myID3 extends Classifier {
     
     /** Attribute used for splitting. */
     private Attribute m_Attribute;
