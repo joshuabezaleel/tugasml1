@@ -14,6 +14,10 @@ import weka.core.Instances;
  * @author Rakhmatullah Yoga S
  */
 public class myANN extends Classifier {
+    
+    public myANN() {
+        
+    }
 
     @Override
     public void buildClassifier(Instances data) throws Exception {

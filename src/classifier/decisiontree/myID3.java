@@ -183,6 +183,7 @@ public class myID3 extends Classifier {
         getCapabilities().testWithFail(data);
         maxClass = maxDataClass(data);
         data = new Instances(data);
+        data.deleteWithMissingClass();
         makeMyID3(data,maxClass);
     }
 }
