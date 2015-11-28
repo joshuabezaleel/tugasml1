@@ -7,6 +7,7 @@ package classifier.neuralnetwork;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -21,8 +22,16 @@ public class Node {
         value = v;
     }
     
-    public void addWeight(double w) {
-        weight.add(w);
+    public void initWeight(int nbNeuron, double w) {
+        for(int i=0; i<nbNeuron; i++)
+            weight.add(w);
+    }
+    
+    public void randomizeWeight() {
+        Random rand = new Random();
+        for (int i=0; i<weight.size(); i++) {
+            weight.set(i, rand.nextDouble());
+        }
     }
     
     public double getOutput(int i) {
