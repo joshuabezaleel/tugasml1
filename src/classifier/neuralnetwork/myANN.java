@@ -6,7 +6,6 @@
 package classifier.neuralnetwork;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
@@ -17,42 +16,18 @@ import weka.core.Instances;
  * @author Rakhmatullah Yoga S
  */
 public class myANN extends Classifier {
+    private List<Node> input = new ArrayList<>();
+    private List<Node> hiddenLayer = new ArrayList<>();
+    private Node output;
+    
+    
     private float deltaW;                           //nilai delta dari weight
-    private List listInput = new ArrayList();       //list fitur-fitur pada satu input
-    private List listNodeLayer  = new ArrayList();  //list node pada sebuah layer
-    private List listInstance = new ArrayList();    //list instance
-    private List targetVal  = new ArrayList();      //list nilai target
-    private int classVal;
-    public myANN() {
-        
-    }
-
+    private ArrayList listInput = new ArrayList();       //list fitur-fitur pada satu input
+    private ArrayList listNodeLayer  = new ArrayList();  //list node pada sebuah layer
+    private ArrayList listInstance = new ArrayList();    //list instance
+    private ArrayList targetVal  = new ArrayList();      //list nilai target
+    private int nbClass;
     
-    public float getDeltaW(){                   //mengembalikan nilai delta dari weight yang akan di-update
-        return deltaW;
-    }
-        
-    public void setDeltaWeight(float deltaW){   //set nilai delta dari weight
-        
-        this.deltaW = deltaW;
-    }
-    
-    public void errorOutput(){
-        
-    }
-    
-    public void makeNode(ArrayList listInput){
-        for(int i=0; i<this.classVal; i++){
-            Node node = new Node();
-            Iterator iterator = listInput.iterator();
-            while(iterator.hasNext()){
-                Object object = iterator.next();
-                Node nodeInput = (Node) object;
-                nodeInput.setWeight(0);
-            }
-            this.listNodeLayer.add(node);
-        }
-    }
     
     
     @Override
