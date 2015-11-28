@@ -13,22 +13,50 @@ import weka.core.Instances;
 
 /**
  *
- * @author Rakhmatullah Yoga S
+ * @author Rakhmatullah Yoga S, Linda Sekawati, Joshua Bezaleel Abednego
  */
 public class myANN extends Classifier {
+    private enum Function {
+        SIGN, STEP, SIGMOID 
+    }
+    private Function func;
     private List<Node> input = new ArrayList<>();
     private List<Node> hiddenLayer = new ArrayList<>();
     private Node output;
+    private double threshold;
+    private double target;
+    private int nbLayer;
+    private int epoch;
     
+    public double countInput(int idxLayer) {
+        double outputSum = 0;
+        for (Node inputNode : input) {
+            outputSum += inputNode.getOutput(idxLayer);
+        }
+        return activationFunction(outputSum);
+    }
     
-    private float deltaW;                           //nilai delta dari weight
-    private ArrayList listInput = new ArrayList();       //list fitur-fitur pada satu input
-    private ArrayList listNodeLayer  = new ArrayList();  //list node pada sebuah layer
-    private ArrayList listInstance = new ArrayList();    //list instance
-    private ArrayList targetVal  = new ArrayList();      //list nilai target
-    private int nbClass;
-    
-    
+    public double activationFunction(double sum) {
+        double result;
+        switch(func) {
+            case SIGN:
+                if(sum>=0)
+                    result = 1;
+                else
+                    result = -1;
+                break;
+            case STEP:
+                if(sum>=threshold)
+                    result = 1;
+                else
+                    result = 0;
+                break;
+            case SIGMOID:
+                result = 1/(1+Math.exp(-sum));
+                break;
+        }
+        return 0;
+    }
     
     @Override
     public void buildClassifier(Instances data) throws Exception {
