@@ -1,6 +1,7 @@
 package classifier.neuralnetwork;
 
 import weka.classifiers.Classifier;
+import weka.core.Instances;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -12,5 +13,10 @@ import weka.classifiers.Classifier;
  *
  * @author asus
  */
-public class DeltaRuleBatch extends Classifier {
+public class DeltaRuleBatch extends SingleLayerPerceptron {
+
+    @Override
+    public void buildClassifier(Instances data) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
