@@ -5,11 +5,11 @@
  */
 package classifier.neuralnetwork;
 
-import java.util.Enumeration;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.matrix.Maths;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
 import weka.filters.unsupervised.attribute.Normalize;
@@ -109,7 +109,12 @@ public class myANN extends Classifier {
             network[i] = new Node[nbNeuron[i]];
             for(int j=0; j<nbNeuron[i]; j++) {
                 network[i][j] = new Node();
-                network[i][j].initWeight(nbNeuron[i+1], givenWeight);
+                if(i==0) {
+                    network[i][j].initWeight(nbInput+1, givenWeight);
+                }
+                else {
+                    network[i][j].initWeight(nbNeuron[i-1]+1, givenWeight);
+                }
                 if(randomWeight)
                     network[i][j].randomizeWeight();
             }
@@ -138,7 +143,25 @@ public class myANN extends Classifier {
                     attr = instance.value(idx);
                     idx++;
                 }
+                double[] output;
+                double[] localInput = inputAttr;
                 // operasi feed forward
+                for(int level=0; level<network.length; level++) {
+                    double[] result = new double[network[level].length];
+                    for(int neuron=0; neuron<network[level].length; neuron++) {
+                        network[level][neuron].setInput(localInput);
+                        network[level][neuron].computeValue();
+                        result[level] = network[level][neuron].getValue();
+                    }
+                    localInput = result;
+                }
+                output = localInput;
+                double currentMSE = 0.0;
+                for(int id=0; id<targets.length; id++) {
+                    currentMSE+=Maths.square(targets[id]-output[id]);
+                }
+                currentMSE/=2.0;
+                // BACKPROP
                 
             }
             

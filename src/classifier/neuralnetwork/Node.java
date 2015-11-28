@@ -14,12 +14,27 @@ import java.util.Random;
  * @author LINDA
  */
 public class Node {
+    private static final double BIAS = 1.0;
     private double value;
     private List<Double> weight = new ArrayList<>();
+    private List<Double> input = new ArrayList<>();
     private List<Double> error = new ArrayList<>();
     
-    public void setValue(double v) {
-        value = v;
+    public void setInput(double[] input) {
+        for (double j : input) {
+            this.input.add(j);
+        }
+    }
+    
+    public void computeValue() {
+        value = BIAS*weight.get(0);
+        for(int i=0; i<input.size(); i++) {
+            value+=(input.get(i)*weight.get(i+1));
+        }
+    }
+    
+    public double getValue() {
+        return value;
     }
     
     public void initWeight(int nbNeuron, double w) {
