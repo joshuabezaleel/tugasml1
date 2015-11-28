@@ -5,8 +5,10 @@
  */
 package classifier.neuralnetwork;
 
+import java.util.Enumeration;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
@@ -31,7 +33,7 @@ public class myANN extends Classifier {
     private int nbLayer;
     private int[] nbNeuron;
     private int nbInput;
-    private int epoch;
+    private int maxEpoch;
     private boolean singlePerceptron;
     private boolean randomWeight;
     
@@ -113,6 +115,35 @@ public class myANN extends Classifier {
             }
         }
         attrClass = data.classAttribute();
+        int epoch=0;
+        double MSE = 0;
+        while(epoch<maxEpoch && MSE>threshold) {
+            for (int in=0; in<data.numInstances(); in++) {
+                Instance instance = data.instance(in);
+                double[] targets;
+                if(instance.classAttribute().isNominal()) {
+                    targets = new double[attrClass.numValues()];
+                    for (double targetN : targets) {
+                        targetN = 0.0;
+                    }
+                    targets[(int)instance.classValue()] = 1.0;
+                }
+                else {
+                    targets = new double[1];
+                    targets[0] = instance.classValue();
+                }
+                double[] inputAttr = new double[instance.numAttributes()-1];
+                int idx = 0;
+                for (double attr : inputAttr) {
+                    attr = instance.value(idx);
+                    idx++;
+                }
+                // operasi feed forward
+                
+            }
+            
+            epoch++;
+        }
     }
     
 }
