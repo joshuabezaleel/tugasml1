@@ -8,65 +8,83 @@ package classifier.neuralnetwork;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import weka.classifiers.Classifier;
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.filters.Filter;
+import weka.filters.supervised.attribute.NominalToBinary;
+import weka.filters.unsupervised.attribute.Normalize;
 
 /**
  *
  * @author asus
  */
-public class PTRCoba {
+public class PTRCoba extends Classifier {
+    private Neuron neuron = new Neuron();
+    private List<Double> inputList = new ArrayList<>();     // attrValue
+    private int juminput;
+    private double input;
+    private int currEpoch = 1;
+    private int maxEpoch;
+    private double error;
+    private double learningRate;
+    private double momentum;
+        
+    public PTRCoba() {
+        maxEpoch = 10;
+        learningRate = 0.1;
+        momentum = 0.0;
+    }
     
-    public static void main(String[] args){
-        Neuron neuron = new Neuron();
-        List<Double> inputList = new ArrayList<>();
-        List<Double> target = new ArrayList<>();
-        int juminput;
-        double input;
-        int currEpoch = 1;
-        int maxEpoch;
-        double error;
-        double learningRate;
-        double momentum;
+    public static int signFunction(double sum){
+        int signResult = 0;
+        if(sum>=0){
+            signResult = 1;
+        } else {
+            signResult = -1;
+        }
+        return signResult;
+    } 
+
+    @Override
+    public void buildClassifier(Instances data) throws Exception {
+        NominalToBinary nomToBinFilter = new NominalToBinary();
+        Normalize normalizeFilter = new Normalize();
         
-        Scanner reader = new Scanner(System.in);
+        // PREPARE DATASET
+        data = new Instances(data);
+        data.deleteWithMissingClass();
+        nomToBinFilter.setInputFormat(data);
+        data = Filter.useFilter(data, nomToBinFilter);
+        normalizeFilter.setInputFormat(data);
+        data = Filter.useFilter(data, normalizeFilter);
         
-        System.out.println("Max epoch: ");
-        maxEpoch = reader.nextInt();
-        
-        System.out.println("Learning rate: ");
-        learningRate = reader.nextDouble();
-        
-        System.out.println("Momentum: ");
-        momentum = reader.nextDouble();
-        
-        System.out.println("Jumlah input: ");
-        juminput = reader.nextInt();
-        
-        int jumtarget;
+//        int jumtarget;              // jumlah instance
         List<Double> targetList = new ArrayList<>();
-        
-        System.out.println("Jumlah target: ");
-        jumtarget = reader.nextInt();
-        
-        for(int j=0;j<juminput*jumtarget;j++){
+//        
+        for(int j=0;j<(data.numAttributes()-1)*data.numInstances();j++){
             inputList.add((double)0);
         }
+//        
+//        for(int i=0;i<jumtarget;i++){
+//            System.out.println("Target "+(i+1)+" : ");
+//            input = reader.nextDouble();
+//            targetList.add(input);
+//        }
         
-        for(int i=0;i<jumtarget;i++){
-            System.out.println("Target "+(i+1)+" : ");
-            input = reader.nextDouble();
-            targetList.add(input);
-        }
-        neuron.initPreviousWeight(juminput,0);
-        neuron.initCurrentWeight(juminput,0);
-        neuron.initDeltaWeight(juminput,0);
-        neuron.initPreviousDeltaWeight(juminput,0);
+        juminput = data.numAttributes()-1;
+        // juminput = jumlah atribut dlm satu instance
+        neuron.initPreviousWeight(juminput+1,0);
+        neuron.initCurrentWeight(juminput+1,0);
+        neuron.initDeltaWeight(juminput+1,0);
+        neuron.initPreviousDeltaWeight(juminput+1,0);
         //neuron.randomizeCurrentWeight();
         neuron.setCurrentWeightZero();
         
         double sum;
         
-        List<Double> errorSquareIterationAfterEpoch = new ArrayList<>();
-        for(int i=0;i<jumtarget;i++){
+//        List<Double> errorSquareIterationAfterEpoch = new ArrayList<>();
+        for(int i=0;i<data.numInstances();i++){
             errorSquareIterationAfterEpoch.add((double)0);
         }
         int errorEpoch = 0;
@@ -75,16 +93,21 @@ public class PTRCoba {
         int h=0;
         do{
             //1 Epoch
-            for(int i=0;i<targetList.size();i++){
+            for(int i=0;i<data.numInstances();i++){
                 sum = 0;
                 System.out.println("epoch="+(h+1));
                 System.out.println("iteration="+(i+1));
                 //Hitung sum
                 if(h==0){
-                    for(int j=i*juminput;j<(i+1)*juminput;j++){
-                        System.out.println("Input " + j + " : ");
-                        input = reader.nextDouble();
-                        inputList.set(j, input);
+                    //Inisialisasi bias
+                    for(int j=0;j<data.numInstances();j++){
+                        inputList.add(j*(data.numAttributes()-1), (double)1);
+                    }
+                    //Input attribute value to inputList
+                    for(int j=0;j<data.numInstances();j++){
+                        for(int k=0;k<data.numAttributes()-1;k++){
+                            inputList.add((k+1)*j*(data.numAttributes()-1),data.instance(j+1).value(k+1));
+                        }
                     }
                 }
                 for(int j=i*juminput;j<(i+1)*juminput;j++){
@@ -92,8 +115,8 @@ public class PTRCoba {
                     sum = sum + (inputList.get(j)*neuron.getCurrentWeight().get(j%4));
                 }
                 System.out.println("sum="+sum);
-                error = targetList.get(i) - signFunction(sum);
-                System.out.println("targetlist="+targetList.get(i));
+                error = data.instance(i).classValue() - signFunction(sum);
+                System.out.println("targetlist="+data.instance(i).classValue());
                 System.out.println("sign="+signFunction(sum));
                 System.out.println("error="+error);
                 for(int j=0;j<juminput;j++){
@@ -107,7 +130,7 @@ public class PTRCoba {
             }
             double tempSum;
             double tempSumError = 0;
-            for(int i=0;i<jumtarget;i++){
+            for(int i=0;i<data.numInstances();i++){
                 tempSum = 0;
                 for(int j=0;j<juminput;j++){
                     tempSum = tempSum + inputList.get(j+(i*juminput));
@@ -120,14 +143,4 @@ public class PTRCoba {
             h++;
         }while(h<=maxEpoch && errorEpoch!=0);
     }
-    
-    public static int signFunction(double sum){
-        int signResult = 0;
-        if(sum>=0){
-            signResult = 1;
-        } else {
-            signResult = -1;
-        }
-        return signResult;
-    } 
 }

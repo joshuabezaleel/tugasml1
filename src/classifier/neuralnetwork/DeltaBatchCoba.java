@@ -8,13 +8,17 @@ package classifier.neuralnetwork;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import weka.classifiers.Classifier;
+import weka.core.Instances;
+import weka.filters.Filter;
+import weka.filters.supervised.attribute.NominalToBinary;
+import weka.filters.unsupervised.attribute.Normalize;
 
 /**
  *
  * @author asus
  */
-public class DeltaBatchCoba {
-     public static void main(String[] args){
+public class DeltaBatchCoba extends Classifier {
         Neuron neuron = new Neuron();
         List<Double> inputList = new ArrayList<>();
         List<Double> target = new ArrayList<>();
@@ -27,40 +31,46 @@ public class DeltaBatchCoba {
         double learningRate;
         double momentum;
         
+    public DeltaBatchCoba(){
+        maxEpoch = 10;
+        learningRate = 0.1;
+        momentum = 0.0;
+    }    
+
+    @Override
+    public void buildClassifier(Instances data) throws Exception {
+        NominalToBinary nomToBinFilter = new NominalToBinary();
+        Normalize normalizeFilter = new Normalize();
+        
+        // PREPARE DATASET
+        data = new Instances(data);
+        data.deleteWithMissingClass();
+        nomToBinFilter.setInputFormat(data);
+        data = Filter.useFilter(data, nomToBinFilter);
+        normalizeFilter.setInputFormat(data);
+        data = Filter.useFilter(data, normalizeFilter);
+        
         Scanner reader = new Scanner(System.in);
         
-        System.out.println("Max epoch: ");
-        maxEpoch = reader.nextInt();
+        juminput = data.numAttributes()-1;
         
-        System.out.println("Learning rate: ");
-        learningRate = reader.nextDouble();
-        
-        System.out.println("Momentum: ");
-        momentum = reader.nextDouble();
-        
-        System.out.println("Jumlah input: ");
-        juminput = reader.nextInt();
-        
-        int jumtarget;
         List<Double> targetList = new ArrayList<>();
         
-        System.out.println("Jumlah target: ");
-        jumtarget = reader.nextInt();
-        
-        for(int j=0;j<juminput*jumtarget;j++){
+        for(int j=0;j<(data.numAttributes()-1)*data.numInstances();j++){
             inputList.add((double)0);
         }
         
-        for(int i=0;i<jumtarget;i++){
-            System.out.println("Target "+(i+1)+" : ");
-            input = reader.nextDouble();
-            targetList.add(input);
-        }
+//        for(int i=0;i<jumtarget;i++){
+//            System.out.println("Target "+(i+1)+" : ");
+//            input = reader.nextDouble();
+//            targetList.add(input);
+//        }
         
-        for(int i=0;i<jumtarget;i++){
+        for(int i=0;i<data.numInstances();i++){
             errorListEpoch.add((double)0);
         }
         
+        juminput = data.numAttributes()-1;
         neuron.initPreviousWeight(juminput,0);
         neuron.initCurrentWeight(juminput,0);
         neuron.initDeltaWeight(juminput,0);
@@ -76,15 +86,20 @@ public class DeltaBatchCoba {
         int h=0;
         do{
             //1 Epoch
-            for(int i=0;i<targetList.size();i++){
+            for(int i=0;i<data.numInstances();i++){
                 sum = 0;
                 System.out.println("epoch="+(h+1));
                 System.out.println("iteration="+(i+1));
                 if(h==0){
-                    for(int j=i*juminput;j<(i+1)*juminput;j++){
-                        System.out.println("Input " + j + " : ");
-                        input = reader.nextDouble();
-                        inputList.set(j, input);
+                    //Inisialisasi bias
+                    for(int j=0;j<data.numInstances();j++){
+                        inputList.add(j*(data.numAttributes()-1), (double)1);
+                    }
+                    //Input attribute value to inputList
+                    for(int j=0;j<data.numInstances();j++){
+                        for(int k=0;k<data.numAttributes()-1;k++){
+                            inputList.add((k+1)*j*(data.numAttributes()-1),data.instance(j+1).value(k+1));
+                        }
                     }
                 }
                 //Hitung sum
@@ -100,7 +115,7 @@ public class DeltaBatchCoba {
             //Penghitungan DeltaWeight dan NewWeight
             for(int j=0;j<juminput;j++){
                 double tempDelta = 0;
-                for(int k=0;k<jumtarget;k++){
+                for(int k=0;k<data.numInstances();k++){
 //                    System.out.println("inputList ke-"+(k*juminput+j)+"= "+inputList.get(k*juminput+j));
 //                    System.out.println("error ke-"+j+"= "+errorListEpoch.get(k));
                     tempDelta = tempDelta + (inputList.get(k*juminput+j)*errorListEpoch.get(k)*learningRate);
@@ -118,7 +133,7 @@ public class DeltaBatchCoba {
             }
             double tempSum = 0;
             double tempSumError = 0;
-            for(int i=0;i<jumtarget;i++){
+            for(int i=0;i<data.numInstances();i++){
                   tempSum = tempSum + Math.pow(errorListEpoch.get(i), 2);
 //                tempSum = 0;
 //                for(int j=0;j<juminput;j++){
