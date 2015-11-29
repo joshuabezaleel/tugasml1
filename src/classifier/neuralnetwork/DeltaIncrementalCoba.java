@@ -13,12 +13,12 @@ import java.util.Scanner;
  *
  * @author asus
  */
-public class PTRCoba {
-    
-    public static void main(String[] args){
+public class DeltaIncrementalCoba {
+     public static void main(String[] args){
         Neuron neuron = new Neuron();
         List<Double> inputList = new ArrayList<>();
         List<Double> target = new ArrayList<>();
+        List<Double> errorListEpoch = new ArrayList<>();
         int juminput;
         double input;
         int currEpoch = 1;
@@ -56,6 +56,11 @@ public class PTRCoba {
             input = reader.nextDouble();
             targetList.add(input);
         }
+        
+         for(int i=0;i<jumtarget;i++){
+            errorListEpoch.add((double)0);
+        }
+         
         neuron.initPreviousWeight(juminput,0);
         neuron.initCurrentWeight(juminput,0);
         neuron.initDeltaWeight(juminput,0);
@@ -64,12 +69,7 @@ public class PTRCoba {
         neuron.setCurrentWeightZero();
         
         double sum;
-        
-        List<Double> errorSquareIterationAfterEpoch = new ArrayList<>();
-        for(int i=0;i<jumtarget;i++){
-            errorSquareIterationAfterEpoch.add((double)0);
-        }
-        int errorEpoch = 0;
+        double errorEpoch = 0;
         
         int iteration;
         int h=0;
@@ -79,7 +79,6 @@ public class PTRCoba {
                 sum = 0;
                 System.out.println("epoch="+(h+1));
                 System.out.println("iteration="+(i+1));
-                //Hitung sum
                 if(h==0){
                     for(int j=i*juminput;j<(i+1)*juminput;j++){
                         System.out.println("Input " + j + " : ");
@@ -87,14 +86,15 @@ public class PTRCoba {
                         inputList.set(j, input);
                     }
                 }
+                //Hitung Sum
                 for(int j=i*juminput;j<(i+1)*juminput;j++){
                     System.out.println("neuron="+neuron.getCurrentWeight().get(j%4));
                     sum = sum + (inputList.get(j)*neuron.getCurrentWeight().get(j%4));
                 }
                 System.out.println("sum="+sum);
-                error = targetList.get(i) - signFunction(sum);
+                error = targetList.get(i) - sum;
+                errorListEpoch.set(i, error);
                 System.out.println("targetlist="+targetList.get(i));
-                System.out.println("sign="+signFunction(sum));
                 System.out.println("error="+error);
                 for(int j=0;j<juminput;j++){
                     System.out.println("SetNewDeltaW"+j+"= "+inputList.get(j)+"*"+error+"*"+"learningRate");
@@ -105,19 +105,22 @@ public class PTRCoba {
                     neuron.setPreviousDeltaWeight(j, neuron.getDeltaWeight().get(j));
                 }
             }
-            double tempSum;
+            double tempSum = 0;
             double tempSumError = 0;
             for(int i=0;i<jumtarget;i++){
-                tempSum = 0;
-                for(int j=0;j<juminput;j++){
-                    tempSum = tempSum + inputList.get(j+(i*juminput));
-                }
-//                errorSquareIterationAfterEpoch.set(i, Math.pow(targetList.get(i)-signFunction(tempSum),2));
-                tempSumError = tempSumError + Math.pow(targetList.get(i)-signFunction(tempSum),2);
-                errorEpoch = (int) (tempSumError * 0.5);
+//                tempSum = 0;
+//                for(int j=0;j<juminput;j++){
+//                    tempSum = tempSum + inputList.get(j+(i*juminput));
+//                }
+////                errorSquareIterationAfterEpoch.set(i, Math.pow(targetList.get(i)-signFunction(tempSum),2));
+//                tempSumError = tempSumError + Math.pow(targetList.get(i)-tempSum,2);
+//                errorEpoch = (int) (tempSumError * 0.5);
+                tempSum = tempSum + Math.pow(errorListEpoch.get(i), 2);
             }
+            errorEpoch = tempSum / 2;
             System.out.println("errorEpoch = "+errorEpoch);
             h++;
+            System.out.println("==========End of Epoch==========");
         }while(h<=maxEpoch && errorEpoch!=0);
     }
     
