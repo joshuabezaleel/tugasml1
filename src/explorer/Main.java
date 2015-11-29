@@ -6,7 +6,8 @@
 package explorer;
 
 import classifier.decisiontree.myC45;
-import classifier.neuralnetwork.myANN;
+import classifier.neuralnetwork.MyMLP;
+import classifier.neuralnetwork.MyPTR;
 import weka.filters.supervised.instance.Resample;
 
 /**
@@ -21,16 +22,16 @@ public class Main {
      */
     public static void main(String[] args) throws Exception {
         WekaProcessor processor = new WekaProcessor();
-        processor.readDataset("data/data_train/latihan.arff");
+        processor.readDataset("data/data_train/weather.nominal.arff");
         processor.setFilterForANN();
-        processor.buildClassifier(new myANN());
+        processor.buildClassifier(new MyPTR());
         //processor.buildFilteredClassifier(new Resample(), new myC45());
         //processor.percentageSplit_Eval(66);
-        processor.nFoldCross_Eval(2);
+        processor.nFoldCross_Eval(10);
         //processor.trainingSet_Eval();
         processor.saveModel();
         //processor.loadModel("data/model/FilteredClassifier.model");
-        processor.readDataset("data/data_classifying/latihan.arff");
+        processor.readDataset("data/data_classifying/weather.nominal.arff");
         processor.classifyDataset();
     }
     

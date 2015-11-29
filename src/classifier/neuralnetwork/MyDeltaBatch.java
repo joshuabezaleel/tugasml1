@@ -19,7 +19,7 @@ import weka.filters.unsupervised.attribute.Normalize;
  *
  * @author asus
  */
-public class DeltaBatchCoba extends Classifier {
+public class MyDeltaBatch extends Classifier {
         Neuron neuron = new Neuron();
         List<Double> inputList = new ArrayList<>();
         List<Double> target = new ArrayList<>();
@@ -32,7 +32,7 @@ public class DeltaBatchCoba extends Classifier {
         double learningRate;
         double momentum;
         
-    public DeltaBatchCoba(){
+    public MyDeltaBatch(){
         maxEpoch = 10;
         learningRate = 0.1;
         momentum = 0.0;

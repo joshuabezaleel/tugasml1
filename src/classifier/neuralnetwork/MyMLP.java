@@ -17,7 +17,7 @@ import weka.filters.unsupervised.attribute.Normalize;
  *
  * @author Rakhmatullah Yoga S, Linda Sekawati, Joshua Bezaleel Abednego
  */
-public class myANN extends Classifier {
+public class MyMLP extends Classifier {
     private Node[][] network;
     private Attribute attrClass;
     private double threshold;
@@ -31,7 +31,7 @@ public class myANN extends Classifier {
     private boolean singlePerceptron;
     private boolean randomWeight;
     
-    public myANN() {
+    public MyMLP() {
         threshold = 1.0;
         givenWeight = 0.0;
         learningRate = 0.1;
@@ -199,8 +199,8 @@ public class myANN extends Classifier {
     @Override
     public double classifyInstance(Instance instance) {
         double[] output;                        // output masing2 class layer
-        double[] localInput = new double[nbInput];
-        for(int i=0; i<localInput.length; i++) {
+        double[] localInput = new double[instance.numAttributes()-1];
+        for(int i=0; i<localInput.length-1; i++) {
             localInput[i] = instance.value(i);
         }
         for(int level=0; level<network.length; level++) {
