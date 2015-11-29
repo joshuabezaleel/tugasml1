@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import weka.classifiers.Classifier;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
@@ -153,5 +154,10 @@ public class DeltaIncrementalCoba extends Classifier {
             h++;
             System.out.println("==========End of Epoch==========");
         }while(h<=maxEpoch && errorEpoch!=0);
+    }
+    
+    @Override
+    public double classifyInstance(Instance instance) {
+        return 0.0;
     }
 }

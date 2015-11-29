@@ -37,7 +37,7 @@ public class myANN extends Classifier {
         learningRate = 0.1;
         momentum = 0.0;
         nbLayer = 1;
-        nbNeuron = new int[2];
+        nbNeuron = new int[nbLayer+1];
         nbNeuron[0] = 2;
         nbNeuron[1] = 1;
         maxEpoch = 10;

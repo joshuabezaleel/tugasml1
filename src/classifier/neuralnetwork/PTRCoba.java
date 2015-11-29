@@ -84,9 +84,6 @@ public class PTRCoba extends Classifier {
         double sum;
         
 //        List<Double> errorSquareIterationAfterEpoch = new ArrayList<>();
-        for(int i=0;i<data.numInstances();i++){
-            errorSquareIterationAfterEpoch.add((double)0);
-        }
         int errorEpoch = 0;
         
         int iteration;
@@ -142,5 +139,25 @@ public class PTRCoba extends Classifier {
             System.out.println("errorEpoch = "+errorEpoch);
             h++;
         }while(h<=maxEpoch && errorEpoch!=0);
+    }
+    
+    @Override
+    public double classifyInstance(Instance data) {
+        List<Double> attributeValue = new ArrayList<>();
+        //Inisialisasi bias
+        attributeValue.add((double)1);
+        
+        //Input attribute value to inputList
+        for(int k=0;k<data.numAttributes()-1;k++){
+            inputList.add(data.value(k));
+        }
+        
+        //including bias
+        double tempSum = 0;
+        for(int k=0;k<data.numAttributes();k++){
+            tempSum = tempSum + (inputList.get(k)*neuron.getCurrentWeight().get(k));
+        }
+        
+        return signFunction(tempSum);
     }
 }

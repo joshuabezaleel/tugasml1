@@ -18,6 +18,8 @@ import weka.core.converters.ConverterUtils;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.SimpleFilter;
+import weka.filters.supervised.attribute.NominalToBinary;
+import weka.filters.unsupervised.attribute.Normalize;
 import weka.filters.unsupervised.attribute.Remove;
 
 /**
@@ -50,6 +52,18 @@ public class WekaProcessor {
         }
         if(dataset.classIndex()==-1)
             dataset.setClassIndex(dataset.numAttributes()-1);
+    }
+    
+    public void setFilterForANN() throws Exception {
+        NominalToBinary nomToBinFilter = new NominalToBinary();
+        Normalize normalizeFilter = new Normalize();
+        
+        dataset = new Instances(dataset);
+        dataset.deleteWithMissingClass();
+        nomToBinFilter.setInputFormat(dataset);
+        dataset = Filter.useFilter(dataset, nomToBinFilter);
+        normalizeFilter.setInputFormat(dataset);
+        dataset = Filter.useFilter(dataset, normalizeFilter);
     }
     
     public void removeAttribute(String idxAttr) throws Exception {

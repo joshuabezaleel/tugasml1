@@ -22,6 +22,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         WekaProcessor processor = new WekaProcessor();
         processor.readDataset("data/data_train/latihan.arff");
+        processor.setFilterForANN();
         processor.buildClassifier(new myANN());
         //processor.buildFilteredClassifier(new Resample(), new myC45());
         //processor.percentageSplit_Eval(66);
