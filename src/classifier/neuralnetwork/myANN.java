@@ -82,11 +82,12 @@ public class myANN extends Classifier {
         // START CLASSIFYING
         attrClass = data.classAttribute();
         int epoch=0;
-        double MSE = 0;
+        double MSE = Double.POSITIVE_INFINITY;
         while(epoch<maxEpoch && MSE>threshold) {
+            MSE = 0.0;
+            double[] targets = null;
             for (int in=0; in<data.numInstances(); in++) {
                 Instance instance = data.instance(in);
-                double[] targets;
                 if(instance.classAttribute().isNominal()) {
                     targets = new double[attrClass.numValues()];
                     for (double targetN : targets) {
@@ -120,7 +121,7 @@ public class myANN extends Classifier {
                 }
                 output = localInput;
                 
-                // BACKPROP
+                // BACKPROP: calculate error
                 for(int level=nbLayer-1; level>=0; level--) {
                     for(int neuron=0; neuron<network[level].length; neuron++) {
                         if(level==nbLayer-1) {
@@ -143,11 +144,47 @@ public class myANN extends Classifier {
                 }
                 
                 // UPDATE WEIGHT
-                
-                
-                // CALCULATE MSE
+                if(in==0) {
+                    for(int level=0; level<network.length; level++) {
+                        for(int neuron=0; neuron<network[level].length; neuron++) {
+                            network[level][neuron].updateWeight(learningRate);
+                        }
+                    }
+                }
+                else {
+                    for(int level=0; level<network.length; level++) {
+                        for(int neuron=0; neuron<network[level].length; neuron++) {
+                            network[level][neuron].updateWeightWithPrevious(learningRate,momentum);
+                        }
+                    }
+                }
             }
-            
+            // RECALCULATE OUTPUT PER NEURON
+            for (int in=0; in<data.numInstances(); in++) {
+                Instance instance = data.instance(in);
+                double[] output;                        // output masing2 class layer
+                double[] localInput = new double[nbInput];
+                for(int ins=0; ins<localInput.length; ins++) {
+                    localInput[ins] = instance.value(ins);
+                }
+                for(int level=0; level<network.length; level++) {
+                    double[] result = new double[network[level].length];
+                    for(int neuron=0; neuron<network[level].length; neuron++) {
+                        network[level][neuron].setInput(localInput);
+                        network[level][neuron].computeValue();
+                        result[neuron] = network[level][neuron].getValue();
+                    }
+                    localInput = result;
+                }
+                output = localInput;
+                double mse = 0.0;
+                for (int iter=0; iter<output.length; iter++) {
+                    mse += Math.pow(targets[iter]-output[iter], 2);
+                }
+                mse /= 2.0;
+                MSE += mse;
+            }
+            MSE /= ((data.numInstances()-1)*network[network.length-1].length);
             epoch++;
         }
     }
