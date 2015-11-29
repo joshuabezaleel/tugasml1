@@ -16,9 +16,22 @@ import java.util.Random;
 public class Node {
     private static final double BIAS = 1.0;
     private double value;
+    private boolean useSigmoid;
     private List<Double> weight = new ArrayList<>();
     private List<Double> input = new ArrayList<>();
     private List<Double> error = new ArrayList<>();
+    
+    public Node() {
+        useSigmoid = true;
+    }
+    
+    public void setSigmoid(boolean use) {
+        useSigmoid = use;
+    }
+    
+    public double sigmoidFunction(double sum) {
+        return 1/(1+Math.exp(-sum));
+    }
     
     public void setInput(double[] input) {
         for (double j : input) {
@@ -31,6 +44,8 @@ public class Node {
         for(int i=0; i<input.size(); i++) {
             value+=(input.get(i)*weight.get(i+1));
         }
+        if(useSigmoid)
+            value = sigmoidFunction(value);
     }
     
     public double getValue() {

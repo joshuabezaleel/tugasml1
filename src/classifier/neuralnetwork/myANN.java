@@ -9,7 +9,6 @@ import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.matrix.Maths;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
 import weka.filters.unsupervised.attribute.Normalize;
@@ -19,10 +18,6 @@ import weka.filters.unsupervised.attribute.Normalize;
  * @author Rakhmatullah Yoga S, Linda Sekawati, Joshua Bezaleel Abednego
  */
 public class myANN extends Classifier {
-    private enum Function {
-        SIGN, STEP, SIGMOID 
-    }
-    private Function func;
     private Node[][] network;
     private Attribute attrClass;
     private double threshold;
@@ -37,47 +32,6 @@ public class myANN extends Classifier {
     private boolean singlePerceptron;
     private boolean randomWeight;
     
-    /**
-     * mendapatkan sum hasil kali weight dan x dari input layer sebelumnya
-     * @param idxLayer index dari layer yang akan menerima input
-     * @param layerLevel level dari layer sebelumnya yang menjadi input
-     * @return 
-     */
-    public double countInput(int idxLayer, int layerLevel) {
-        double outputSum = 0;
-        for (Node network_layerN : network[layerLevel]) {
-            outputSum += network_layerN.getOutput(idxLayer);
-        }
-        return activationFunction(outputSum);
-    }
-    
-    /**
-     * Fungsi aktivasi untuk masing-masing neuron
-     * @param sum jumlah hasil kali bobot dan value
-     * @return hasil masukan fungsi aktivasi
-     */
-    public double activationFunction(double sum) {
-        double result;
-        switch(func) {
-            case SIGN:
-                if(sum>=0)
-                    result = 1;
-                else
-                    result = -1;
-                break;
-            case STEP:
-                if(sum>=threshold)
-                    result = 1;
-                else
-                    result = 0;
-                break;
-            case SIGMOID:
-                result = 1/(1+Math.exp(-sum));
-                break;
-        }
-        return 0;
-    }
-    
     public double countError(int idxLevel) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -87,12 +41,15 @@ public class myANN extends Classifier {
         NominalToBinary nomToBinFilter = new NominalToBinary();
         Normalize normalizeFilter = new Normalize();
         
+        // PREPARE DATASET
         data = new Instances(data);
         data.deleteWithMissingClass();
         nomToBinFilter.setInputFormat(data);
         data = Filter.useFilter(data, nomToBinFilter);
         normalizeFilter.setInputFormat(data);
         data = Filter.useFilter(data, normalizeFilter);
+        
+        // BUILDING NETWORK
         nbInput = data.numAttributes()-1;
         nbNeuron = new int[nbLayer+1];
         // WARNING: assign dulu berapa neuron per layernya
@@ -111,6 +68,11 @@ public class myANN extends Classifier {
                 network[i][j] = new Node();
                 if(i==0) {
                     network[i][j].initWeight(nbInput+1, givenWeight);
+                }
+                else if(i==nbLayer-1) {
+                    if(data.classAttribute().isNumeric())
+                        network[i][j].setSigmoid(false);
+                    network[i][j].initWeight(nbNeuron[i-1]+1, givenWeight);
                 }
                 else {
                     network[i][j].initWeight(nbNeuron[i-1]+1, givenWeight);
@@ -137,30 +99,32 @@ public class myANN extends Classifier {
                     targets = new double[1];
                     targets[0] = instance.classValue();
                 }
-                double[] inputAttr = new double[instance.numAttributes()-1];
+                double[] inputAttr = new double[nbInput];
                 int idx = 0;
                 for (double attr : inputAttr) {
                     attr = instance.value(idx);
                     idx++;
                 }
-                double[] output;
-                double[] localInput = inputAttr;
+                // END OF BUILDING NETWORK
+                // ==============================
                 // operasi feed forward
+                double[] output;                        // output masing2 class layer
+                double[] localInput = inputAttr;
                 for(int level=0; level<network.length; level++) {
                     double[] result = new double[network[level].length];
                     for(int neuron=0; neuron<network[level].length; neuron++) {
                         network[level][neuron].setInput(localInput);
                         network[level][neuron].computeValue();
-                        result[level] = network[level][neuron].getValue();
+                        result[neuron] = network[level][neuron].getValue();
                     }
                     localInput = result;
                 }
                 output = localInput;
-                double currentMSE = 0.0;
-                for(int id=0; id<targets.length; id++) {
-                    currentMSE+=Maths.square(targets[id]-output[id]);
-                }
-                currentMSE/=2.0;
+//                double currentMSE = 0.0;
+//                for(int id=0; id<targets.length; id++) {
+//                    currentMSE+=Maths.square(targets[id]-output[id]);
+//                }
+//                currentMSE/=2.0;
                 // BACKPROP
                 
             }
