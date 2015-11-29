@@ -17,6 +17,7 @@ public class Neuron {
     private List<Double> previousWeight = new ArrayList<>();
     private List<Double> currentWeight = new ArrayList<>();
     private List<Double> deltaWeight = new ArrayList<>();
+    private List<Double> previousDeltaWeight = new ArrayList<>();
     private double value;
     private double error;
     
@@ -32,6 +33,10 @@ public class Neuron {
         return deltaWeight;
     }
     
+    public List<Double> getPreviousDeltaWeight(){
+        return previousDeltaWeight;
+    }
+    
     public void setDeltaWeight(int index, double weight){
         this.deltaWeight.set(index, weight);
     }
@@ -42,6 +47,10 @@ public class Neuron {
     
     public void setPreviousWeight(int index, double weight){
         this.previousWeight.set(index, weight);
+    }
+    
+    public void setPreviousDeltaWeight(int index, double weight){
+        this.previousDeltaWeight.set(index,weight);
     }
     
     public void initPreviousWeight(int nbNeuron, double w) {
@@ -57,6 +66,12 @@ public class Neuron {
     public void initDeltaWeight(int nbNeuron, double w) {
         for(int i=0; i<nbNeuron; i++)
             deltaWeight.add(w);
+    }
+    
+    public void initPreviousDeltaWeight(int nbNeuron, double w){
+        for(int i=0;i<nbNeuron;i++){
+            previousDeltaWeight.add(w);
+        }
     }
     
     public void randomizeCurrentWeight() {
