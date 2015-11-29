@@ -5,6 +5,7 @@
  */
 package classifier.neuralnetwork;
 
+import static classifier.neuralnetwork.MyPTR.signFunction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -151,8 +152,23 @@ public class MyDeltaBatch extends Classifier {
     }
     
     @Override
-    public double classifyInstance(Instance instance) {
-        return 0.0;
+    public double classifyInstance(Instance data) {
+        List<Double> attributeValue = new ArrayList<>();
+        //Inisialisasi bias
+        attributeValue.add((double)1);
+        
+        //Input attribute value to inputList
+        for(int k=0;k<data.numAttributes()-1;k++){
+            inputList.add(data.value(k));
+        }
+        
+        //including bias
+        double tempSum = 0;
+        for(int k=0;k<data.numAttributes();k++){
+            tempSum = tempSum + (inputList.get(k)*neuron.getCurrentWeight().get(k));
+        }
+        
+        return signFunction(tempSum);
     }
     
 }
