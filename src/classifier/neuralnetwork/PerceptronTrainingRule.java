@@ -15,10 +15,12 @@ import weka.core.Instances;
  */
 public class PerceptronTrainingRule extends SingleLayerPerceptron {
 
-    
     public PerceptronTrainingRule(int _maxIteration, List<Node> _listOfNode, double _learningRate, double _momentum) {
         super(_maxIteration, _listOfNode, _learningRate, _momentum);
     }   
+    
+    private double[] previousWeight;
+    private double[] lastWeight;
     
     @Override
     public void buildClassifier(Instances data) throws Exception {
