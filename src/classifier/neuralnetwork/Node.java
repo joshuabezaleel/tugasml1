@@ -5,22 +5,21 @@
  */
 package classifier.neuralnetwork;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
 import java.util.Random;
 
 /**
  *
  * @author LINDA
  */
-public class Node {
+public class Node implements Serializable {
     private static final double BIAS = 1.0;
     private double value;
     private double error;
     private boolean useSigmoid;
-    private List<Double> weight = new ArrayList<>();
-    private List<Double> deltaWeight = new ArrayList<>();
-    private List<Double> input = new ArrayList<>();
+    private double[] weights;
+    private double[] deltaWeights;
+    private double[] inputs;
     
     public Node() {
         useSigmoid = true;
@@ -43,15 +42,13 @@ public class Node {
     }
     
     public void setInput(double[] input) {
-        for (double j : input) {
-            this.input.add(j);
-        }
+        inputs = input.clone();
     }
     
     public void computeValue() {
-        value = BIAS*weight.get(0);
-        for(int i=0; i<input.size(); i++) {
-            value+=(input.get(i)*weight.get(i+1));
+        value = BIAS*weights[0];
+        for(int i=0; i<inputs.length; i++) {
+            value+=(inputs[i]*weights[i+1]);
         }
         if(useSigmoid)
             value = sigmoidFunction(value);
@@ -62,43 +59,47 @@ public class Node {
     }
     
     public void initWeight(int nbNeuron, double w) {
-        for(int i=0; i<nbNeuron; i++)
-            weight.add(w);
+        weights = new double[nbNeuron];
+        deltaWeights = new double[nbNeuron];
+        for(int i=0; i<nbNeuron; i++) {
+            weights[i] = w;
+            deltaWeights[i] = 0.0;
+        }
     }
     
     public void randomizeWeight() {
         Random rand = new Random();
-        for (int i=0; i<weight.size(); i++) {
-            weight.set(i, rand.nextDouble());
+        for (int i=0; i<weights.length; i++) {
+            weights[i] = rand.nextDouble();
         }
     }
     
     public void updateWeight(double learningRate) {
-        for(int i=0; i<weight.size(); i++) {
+        for(int i=0; i<weights.length; i++) {
             if(i==0) {
-                deltaWeight.set(i, learningRate*error*BIAS);
+                deltaWeights[i] = learningRate*error*BIAS;
             }
             else {
-                deltaWeight.set(i, learningRate*error*input.get(i-1));
+                deltaWeights[i] = learningRate*error*inputs[i-1];
             }
-            weight.set(i, weight.get(i)+deltaWeight.get(i));
+            weights[i] = weights[i]+deltaWeights[i];
         }
     }
     
     public void updateWeightWithPrevious(double learningRate, double momentumRate) {
-        for(int i=0; i<weight.size(); i++) {
-            double prevDeltaWeight = deltaWeight.get(i);
+        for(int i=0; i<weights.length; i++) {
+            double prevDeltaWeight = deltaWeights[i];
             if(i==0) {
-                deltaWeight.set(i, learningRate*error*BIAS+prevDeltaWeight*momentumRate);
+                deltaWeights[i] = learningRate*error*BIAS+prevDeltaWeight*momentumRate;
             }
             else {
-                deltaWeight.set(i, learningRate*error*input.get(i-1)+prevDeltaWeight*momentumRate);
+                deltaWeights[i] = learningRate*error*inputs[i-1]+prevDeltaWeight*momentumRate;
             }
-            weight.set(i, weight.get(i)+deltaWeight.get(i));
+            weights[i] = weights[i]+deltaWeights[i];
         }
     }
     
     public double getSpecificWeight(int idxNeuron) {
-        return weight.get(idxNeuron);
+        return weights[idxNeuron];
     }
 }
