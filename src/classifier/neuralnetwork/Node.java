@@ -19,6 +19,7 @@ public class Node {
     private double error;
     private boolean useSigmoid;
     private List<Double> weight = new ArrayList<>();
+    private List<Double> deltaWeight = new ArrayList<>();
     private List<Double> input = new ArrayList<>();
     
     public Node() {
@@ -75,11 +76,25 @@ public class Node {
     public void updateWeight(double learningRate) {
         for(int i=0; i<weight.size(); i++) {
             if(i==0) {
-                weight.set(i, weight.get(i)+(learningRate*error*BIAS));
+                deltaWeight.set(i, learningRate*error*BIAS);
             }
             else {
-                weight.set(i, weight.get(i)+(learningRate*error*input.get(i-1)));
+                deltaWeight.set(i, learningRate*error*input.get(i-1));
             }
+            weight.set(i, weight.get(i)+deltaWeight.get(i));
+        }
+    }
+    
+    public void updateWeightWithPrevious(double learningRate, double momentumRate) {
+        for(int i=0; i<weight.size(); i++) {
+            double prevDeltaWeight = deltaWeight.get(i);
+            if(i==0) {
+                deltaWeight.set(i, learningRate*error*BIAS+prevDeltaWeight*momentumRate);
+            }
+            else {
+                deltaWeight.set(i, learningRate*error*input.get(i-1)+prevDeltaWeight*momentumRate);
+            }
+            weight.set(i, weight.get(i)+deltaWeight.get(i));
         }
     }
     
