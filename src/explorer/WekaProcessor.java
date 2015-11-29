@@ -74,6 +74,17 @@ public class WekaProcessor {
         classifier.buildClassifier(dataset);
     }
     
+    public void trainingSet_Eval() throws Exception {
+        Evaluation eval = new Evaluation(dataset);
+        eval.evaluateModel(classifier, dataset);
+        System.out.println(eval.toSummaryString("Evaluation results (given training set)\n", false));
+        if(dataset.classAttribute().isNominal()) {
+            System.out.println(eval.toClassDetailsString());
+            System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
+            System.out.println(eval.toMatrixString());
+        }
+    }
+    
     public void percentageSplit_Eval(int percentage) throws Exception {
         int trainSize = (int) Math.round(dataset.numInstances()* percentage/100);
         int testSize = dataset.numInstances() - trainSize;
@@ -86,9 +97,11 @@ public class WekaProcessor {
         eval = new Evaluation(train);
         eval.evaluateModel(percent_cls, test);
         System.out.println(eval.toSummaryString("Evaluation results (Percentage split)\n", false));
-        System.out.println(eval.toClassDetailsString());
-        System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
-        System.out.println(eval.toMatrixString());
+        if(dataset.classAttribute().isNominal()) {
+            System.out.println(eval.toClassDetailsString());
+            System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
+            System.out.println(eval.toMatrixString());
+        }
     }
     
     public void nFoldCross_Eval(int folds) throws Exception {
@@ -96,9 +109,11 @@ public class WekaProcessor {
         rand = new Random(1); // cross validation
         eval.crossValidateModel(classifier, dataset, folds, rand); //cross validation
         System.out.println(eval.toSummaryString("Evaluation results ("+folds+" fold cross validation)\n", false));
-        System.out.println(eval.toClassDetailsString());
-        System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
-        System.out.println(eval.toMatrixString());
+        if(dataset.classAttribute().isNominal()) {
+            System.out.println(eval.toClassDetailsString());
+            System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
+            System.out.println(eval.toMatrixString());
+        }
     }
     
     public void saveModel() throws Exception {

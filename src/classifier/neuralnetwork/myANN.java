@@ -22,7 +22,6 @@ public class myANN extends Classifier {
     private Attribute attrClass;
     private double threshold;
     private double givenWeight;
-    private double target;
     private double learningRate;
     private double momentum;
     private int nbLayer;
@@ -31,6 +30,19 @@ public class myANN extends Classifier {
     private int maxEpoch;
     private boolean singlePerceptron;
     private boolean randomWeight;
+    
+    public myANN() {
+        threshold = 1.0;
+        givenWeight = 0.0;
+        learningRate = 0.1;
+        momentum = 0.0;
+        nbLayer = 1;
+        nbNeuron = new int[2];
+        nbNeuron[0] = 2;
+        nbNeuron[1] = 1;
+        maxEpoch = 10;
+        randomWeight = false;
+    }
     
     @Override
     public void buildClassifier(Instances data) throws Exception {
@@ -47,18 +59,13 @@ public class myANN extends Classifier {
         
         // BUILDING NETWORK
         nbInput = data.numAttributes()-1;
-        nbNeuron = new int[nbLayer+1];
         // WARNING: assign dulu berapa neuron per layernya
-        int i=0;
-        for(i=0; i<nbLayer; i++) {
-            nbNeuron[i] = nbLayer-i;
-        }
         if(data.classAttribute().isNumeric())
-            nbNeuron[i] = 1;
+            nbNeuron[nbLayer] = 1;
         else
-            nbNeuron[i] = data.classAttribute().numValues();
-        network = new Node[nbLayer][];
-        for(i=0; i<nbNeuron.length; i++) {
+            nbNeuron[nbLayer] = data.classAttribute().numValues();
+        network = new Node[nbLayer+1][];
+        for(int i=0; i<nbLayer+1; i++) {
             network[i] = new Node[nbNeuron[i]];
             for(int j=0; j<nbNeuron[i]; j++) {
                 network[i][j] = new Node();
@@ -122,9 +129,9 @@ public class myANN extends Classifier {
                 output = localInput;
                 
                 // BACKPROP: calculate error
-                for(int level=nbLayer-1; level>=0; level--) {
+                for(int level=network.length-1; level>=0; level--) {
                     for(int neuron=0; neuron<network[level].length; neuron++) {
-                        if(level==nbLayer-1) {
+                        if(level==network.length-1) {
                             if(attrClass.isNumeric()) {
                                 network[level][neuron].setError(targets[neuron]-output[neuron]);
                             }
@@ -133,7 +140,7 @@ public class myANN extends Classifier {
                             }
                         }
                         else {
-                            double error = output[neuron]*(1-output[neuron]);
+                            double error = network[level][neuron].getValue()*(1-network[level][neuron].getValue());
                             double sumWeightError = 0.0;
                             for(int j=0; j<network[level+1].length; j++) {
                                 sumWeightError += network[level+1][j].getError()*network[level+1][j].getSpecificWeight(neuron);
@@ -189,4 +196,31 @@ public class myANN extends Classifier {
         }
     }
     
+    @Override
+    public double classifyInstance(Instance instance) {
+        double[] output;                        // output masing2 class layer
+        double[] localInput = new double[nbInput];
+        for(int i=0; i<localInput.length; i++) {
+            localInput[i] = instance.value(i);
+        }
+        for(int level=0; level<network.length; level++) {
+            double[] result = new double[network[level].length];
+            for(int neuron=0; neuron<network[level].length; neuron++) {
+                network[level][neuron].setInput(localInput);
+                network[level][neuron].computeValue();
+                result[neuron] = network[level][neuron].getValue();
+            }
+            localInput = result;
+        }
+        output = localInput;
+        if(!instance.classAttribute().isNumeric()) {
+            int maxIdx = 0;
+            for(int i=1; i<output.length; i++) {
+                if(output[maxIdx]<output[i])
+                    maxIdx = i;
+            }
+            return output[maxIdx];
+        }
+        return output[0];
+    }
 }
