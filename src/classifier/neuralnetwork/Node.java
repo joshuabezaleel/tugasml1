@@ -16,13 +16,21 @@ import java.util.Random;
 public class Node {
     private static final double BIAS = 1.0;
     private double value;
+    private double error;
     private boolean useSigmoid;
     private List<Double> weight = new ArrayList<>();
     private List<Double> input = new ArrayList<>();
-    private List<Double> error = new ArrayList<>();
     
     public Node() {
         useSigmoid = true;
+    }
+    
+    public void setError(double err) {
+        error = err;
+    }
+    
+    public double getError() {
+        return error;
     }
     
     public void setSigmoid(boolean use) {
@@ -64,7 +72,18 @@ public class Node {
         }
     }
     
-    public double getOutput(int i) {
-        return weight.get(i)*value;
+    public void updateWeight(double learningRate) {
+        for(int i=0; i<weight.size(); i++) {
+            if(i==0) {
+                weight.set(i, weight.get(i)+(learningRate*error*BIAS));
+            }
+            else {
+                weight.set(i, weight.get(i)+(learningRate*error*input.get(i-1)));
+            }
+        }
+    }
+    
+    public double getSpecificWeight(int idxNeuron) {
+        return weight.get(idxNeuron);
     }
 }

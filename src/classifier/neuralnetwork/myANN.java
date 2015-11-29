@@ -32,10 +32,6 @@ public class myANN extends Classifier {
     private boolean singlePerceptron;
     private boolean randomWeight;
     
-    public double countError(int idxLevel) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
     @Override
     public void buildClassifier(Instances data) throws Exception {
         NominalToBinary nomToBinFilter = new NominalToBinary();
@@ -81,6 +77,9 @@ public class myANN extends Classifier {
                     network[i][j].randomizeWeight();
             }
         }
+        // END OF BUILDING NETWORK
+        
+        // START CLASSIFYING
         attrClass = data.classAttribute();
         int epoch=0;
         double MSE = 0;
@@ -120,13 +119,33 @@ public class myANN extends Classifier {
                     localInput = result;
                 }
                 output = localInput;
-//                double currentMSE = 0.0;
-//                for(int id=0; id<targets.length; id++) {
-//                    currentMSE+=Maths.square(targets[id]-output[id]);
-//                }
-//                currentMSE/=2.0;
-                // BACKPROP
                 
+                // BACKPROP
+                for(int level=nbLayer-1; level>=0; level--) {
+                    for(int neuron=0; neuron<network[level].length; neuron++) {
+                        if(level==nbLayer-1) {
+                            if(attrClass.isNumeric()) {
+                                network[level][neuron].setError(targets[neuron]-output[neuron]);
+                            }
+                            else {
+                                network[level][neuron].setError((targets[neuron]-output[neuron])*(1-output[neuron])*output[neuron]);
+                            }
+                        }
+                        else {
+                            double error = output[neuron]*(1-output[neuron]);
+                            double sumWeightError = 0.0;
+                            for(int j=0; j<network[level+1].length; j++) {
+                                sumWeightError += network[level+1][j].getError()*network[level+1][j].getSpecificWeight(neuron);
+                            }
+                            network[level][neuron].setError(error*sumWeightError);
+                        }
+                    }
+                }
+                
+                // UPDATE WEIGHT
+                
+                
+                // CALCULATE MSE
             }
             
             epoch++;
