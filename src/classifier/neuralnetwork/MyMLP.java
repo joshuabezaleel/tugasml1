@@ -5,10 +5,12 @@
  */
 package classifier.neuralnetwork;
 
+import java.util.Arrays;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.NoSupportForMissingValuesException;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
 import weka.filters.unsupervised.attribute.Normalize;
@@ -20,6 +22,7 @@ import weka.filters.unsupervised.attribute.Normalize;
 public class MyMLP extends Classifier {
     private Node[][] network;
     private Attribute attrClass;
+    private boolean randomWeight;
     private double threshold;
     private double givenWeight;
     private double learningRate;
@@ -28,8 +31,6 @@ public class MyMLP extends Classifier {
     private int[] nbNeuron;
     private int nbInput;
     private int maxEpoch;
-    private boolean singlePerceptron;
-    private boolean randomWeight;
     
     public MyMLP() {
         threshold = 1.0;
@@ -39,33 +40,22 @@ public class MyMLP extends Classifier {
         nbLayer = 1;
         nbNeuron = new int[nbLayer+1];
         nbNeuron[0] = 2;
-        nbNeuron[1] = 1;
         maxEpoch = 10;
         randomWeight = false;
     }
     
     @Override
     public void buildClassifier(Instances data) throws Exception {
-        NominalToBinary nomToBinFilter = new NominalToBinary();
-        Normalize normalizeFilter = new Normalize();
-        
-        // PREPARE DATASET
-        data = new Instances(data);
-        data.deleteWithMissingClass();
-        nomToBinFilter.setInputFormat(data);
-        data = Filter.useFilter(data, nomToBinFilter);
-        normalizeFilter.setInputFormat(data);
-        data = Filter.useFilter(data, normalizeFilter);
         
         // BUILDING NETWORK
         nbInput = data.numAttributes()-1;
         // WARNING: assign dulu berapa neuron per layernya
         if(data.classAttribute().isNumeric())
-            nbNeuron[nbLayer] = 1;
+            nbNeuron[nbNeuron.length-1] = 1;
         else
-            nbNeuron[nbLayer] = data.classAttribute().numValues();
-        network = new Node[nbLayer+1][];
-        for(int i=0; i<nbLayer+1; i++) {
+            nbNeuron[nbNeuron.length-1] = data.classAttribute().numValues();
+        network = new Node[nbNeuron.length][];
+        for(int i=0; i<nbNeuron.length; i++) {
             network[i] = new Node[nbNeuron[i]];
             for(int j=0; j<nbNeuron[i]; j++) {
                 network[i][j] = new Node();
@@ -90,15 +80,15 @@ public class MyMLP extends Classifier {
         attrClass = data.classAttribute();
         int epoch=0;
         double MSE = Double.POSITIVE_INFINITY;
-        while(epoch<maxEpoch && MSE>threshold) {
+        while((epoch<maxEpoch) && (Double.compare(MSE, threshold)>0)) {
             MSE = 0.0;
             double[] targets = null;
             for (int in=0; in<data.numInstances(); in++) {
                 Instance instance = data.instance(in);
                 if(instance.classAttribute().isNominal()) {
                     targets = new double[attrClass.numValues()];
-                    for (double targetN : targets) {
-                        targetN = 0.0;
+                    for(int k=0; k<targets.length; k++) {
+                        targets[k] = 0.0;
                     }
                     targets[(int)instance.classValue()] = 1.0;
                 }
@@ -107,16 +97,15 @@ public class MyMLP extends Classifier {
                     targets[0] = instance.classValue();
                 }
                 double[] inputAttr = new double[nbInput];
-                int idx = 0;
-                for (double attr : inputAttr) {
-                    attr = instance.value(idx);
-                    idx++;
+                for(int i=0; i<inputAttr.length; i++) {
+                    inputAttr[i] = instance.value(i);
                 }
+                
                 // END OF BUILDING NETWORK
                 // ==============================
                 // operasi feed forward
                 double[] output;                        // output masing2 class layer
-                double[] localInput = inputAttr;
+                double[] localInput = inputAttr.clone();
                 for(int level=0; level<network.length; level++) {
                     double[] result = new double[network[level].length];
                     for(int neuron=0; neuron<network[level].length; neuron++) {
@@ -124,9 +113,11 @@ public class MyMLP extends Classifier {
                         network[level][neuron].computeValue();
                         result[neuron] = network[level][neuron].getValue();
                     }
-                    localInput = result;
+                    localInput = result.clone();
                 }
-                output = localInput;
+                output = localInput.clone();
+                System.out.println("Feed forward epoch: "+epoch+", instance: "+in);
+                System.out.println(Arrays.toString(output)+"\t");
                 
                 // BACKPROP: calculate error
                 for(int level=network.length-1; level>=0; level--) {
@@ -165,6 +156,10 @@ public class MyMLP extends Classifier {
                         }
                     }
                 }
+                for(int level=0; level<network.length; level++) {
+                    for(int neuron=0; neuron<network[level].length; neuron++) {
+                    }
+                }
             }
             // RECALCULATE OUTPUT PER NEURON
             for (int in=0; in<data.numInstances(); in++) {
@@ -181,9 +176,9 @@ public class MyMLP extends Classifier {
                         network[level][neuron].computeValue();
                         result[neuron] = network[level][neuron].getValue();
                     }
-                    localInput = result;
+                    localInput = result.clone();
                 }
-                output = localInput;
+                output = localInput.clone();
                 double mse = 0.0;
                 for (int iter=0; iter<output.length; iter++) {
                     mse += Math.pow(targets[iter]-output[iter], 2);
@@ -192,35 +187,32 @@ public class MyMLP extends Classifier {
                 MSE += mse;
             }
             MSE /= ((data.numInstances()-1)*network[network.length-1].length);
+//            System.out.println("MSE Epoch "+epoch+" = "+MSE);
             epoch++;
         }
     }
-    
+
     @Override
-    public double classifyInstance(Instance instance) {
-        double[] output;                        // output masing2 class layer
-        double[] localInput = new double[instance.numAttributes()-1];
-        for(int i=0; i<localInput.length-1; i++) {
-            localInput[i] = instance.value(i);
+    public double[] distributionForInstance(Instance instance) throws Exception {
+        double[] inputAttr;
+        
+        if(instance.hasMissingValue()) {
+            throw new NoSupportForMissingValuesException("Error: instance has missing value!");
+        }
+        inputAttr = new double[instance.numAttributes()-1];
+        for(int i=0; i<inputAttr.length; i++) {
+            inputAttr[i] = instance.value(i);
         }
         for(int level=0; level<network.length; level++) {
             double[] result = new double[network[level].length];
             for(int neuron=0; neuron<network[level].length; neuron++) {
-                network[level][neuron].setInput(localInput);
+                network[level][neuron].setInput(inputAttr);
                 network[level][neuron].computeValue();
                 result[neuron] = network[level][neuron].getValue();
             }
-            localInput = result;
+            inputAttr = result.clone();
         }
-        output = localInput;
-        if(!instance.classAttribute().isNumeric()) {
-            int maxIdx = 0;
-            for(int i=1; i<output.length; i++) {
-                if(output[maxIdx]<output[i])
-                    maxIdx = i;
-            }
-            return output[maxIdx];
-        }
-        return output[0];
+        double[] output = inputAttr.clone();
+        return output;
     }
 }
