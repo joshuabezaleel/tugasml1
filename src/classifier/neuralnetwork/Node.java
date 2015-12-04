@@ -102,4 +102,8 @@ public class Node implements Serializable {
     public double getSpecificWeight(int idxNeuron) {
         return weights[idxNeuron];
     }
+    
+    public double[] getWeights() {
+        return weights;
+    }
 }
