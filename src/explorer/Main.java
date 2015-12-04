@@ -24,13 +24,13 @@ public class Main {
         WekaProcessor processor = new WekaProcessor();
         processor.readDataset("data/data_train/weather.nominal.arff");
         processor.setFilterForANN();
-        processor.buildClassifier(new MyPTR());
-        //processor.buildFilteredClassifier(new Resample(), new myC45());
-        //processor.percentageSplit_Eval(66);
+        processor.buildClassifier(new MyMLP());
+        processor.buildFilteredClassifier(new Resample(), new myC45());
+        processor.percentageSplit_Eval(66);
         processor.nFoldCross_Eval(10);
-        //processor.trainingSet_Eval();
+        processor.trainingSet_Eval();
         processor.saveModel();
-        //processor.loadModel("data/model/FilteredClassifier.model");
+        processor.loadModel("data/model/FilteredClassifier.model");
         processor.readDataset("data/data_classifying/weather.nominal.arff");
         processor.classifyDataset();
     }

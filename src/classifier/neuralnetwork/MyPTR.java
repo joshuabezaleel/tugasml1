@@ -5,6 +5,7 @@
  */
 package classifier.neuralnetwork;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -19,7 +20,7 @@ import weka.filters.unsupervised.attribute.Normalize;
  *
  * @author asus
  */
-public class MyPTR extends Classifier {
+public class MyPTR extends Classifier{
     private Neuron neuron = new Neuron();
     private List<Double> inputList = new ArrayList<>();     // attrValue
     private int juminput;
@@ -62,10 +63,9 @@ public class MyPTR extends Classifier {
 //        int jumtarget;              // jumlah instance
         List<Double> targetList = new ArrayList<>();
 //        
-        for(int j=0;j<(data.numAttributes()-1)*data.numInstances();j++){
+        for(int j=0;j<(data.numAttributes())*data.numInstances();j++){
             inputList.add((double)0);
         }
-//        
 //        for(int i=0;i<jumtarget;i++){
 //            System.out.println("Target "+(i+1)+" : ");
 //            input = reader.nextDouble();
@@ -97,13 +97,18 @@ public class MyPTR extends Classifier {
                 //Hitung sum
                 if(h==0){
                     //Inisialisasi bias
+                    // debug
+                    System.out.println("numInstance: "+data.numInstances());
+                    System.out.println("numInput: "+inputList.size());
+                    System.out.println("numAttr: "+data.numAttributes());
                     for(int j=0;j<data.numInstances();j++){
                         inputList.add((data.numAttributes()*j)+j, (double)1);
                     }
+                    System.out.println("inputList: "+inputList.size());
                     //Input attribute value to inputList
                     for(int j=0;j<data.numInstances();j++){
                         for(int k=0;k<data.numAttributes()-1;k++){
-                            inputList.add((k+1)+j*(data.numAttributes()+1),data.instance(j+1).value(k+1));
+                            inputList.add((k+1)+j*(data.numAttributes()+1),data.instance(j).value(k));
                         }
                     }
                 }
@@ -127,16 +132,16 @@ public class MyPTR extends Classifier {
             }
             double tempSum;
             double tempSumError = 0;
-            for(int i=0;i<data.numInstances();i++){
-                tempSum = 0;
-                for(int j=0;j<juminput;j++){
-                    tempSum = tempSum + inputList.get(j+(i*juminput));
-                }
-//                errorSquareIterationAfterEpoch.set(i, Math.pow(targetList.get(i)-signFunction(tempSum),2));
-                tempSumError = tempSumError + Math.pow(targetList.get(i)-signFunction(tempSum),2);
-                errorEpoch = (int) (tempSumError * 0.5);
-            }
-            System.out.println("errorEpoch = "+errorEpoch);
+//            for(int i=0;i<data.numInstances();i++){
+//                tempSum = 0;
+//                for(int j=0;j<juminput;j++){
+//                    tempSum = tempSum + inputList.get(j+(i*juminput));
+//                }
+////                errorSquareIterationAfterEpoch.set(i, Math.pow(targetList.get(i)-signFunction(tempSum),2));
+//                tempSumError = tempSumError + Math.pow(targetList.get(i)-signFunction(tempSum),2);
+//                errorEpoch = (int) (tempSumError * 0.5);
+//            }
+//            System.out.println("errorEpoch = "+errorEpoch);
             h++;
         }while(h<=maxEpoch && errorEpoch!=0);
     }

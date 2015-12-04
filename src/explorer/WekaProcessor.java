@@ -5,6 +5,7 @@
  */
 package explorer;
 
+import classifier.neuralnetwork.MyCrossValidateModel;
 import java.io.File;
 import java.io.IOException;
 import weka.classifiers.Classifier;
@@ -119,14 +120,22 @@ public class WekaProcessor {
     }
     
     public void nFoldCross_Eval(int folds) throws Exception {
-        Evaluation eval = new Evaluation(dataset);
+        MyCrossValidateModel myEval = new MyCrossValidateModel();
+//        Evaluation eval = new Evaluation(dataset);
         rand = new Random(1); // cross validation
-        eval.crossValidateModel(classifier, dataset, folds, rand); //cross validation
-        System.out.println(eval.toSummaryString("Evaluation results ("+folds+" fold cross validation)\n", false));
-        if(dataset.classAttribute().isNominal()) {
-            System.out.println(eval.toClassDetailsString());
-            System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
-            System.out.println(eval.toMatrixString());
+        int[][] temp;
+        temp = myEval.crossValidateModel(classifier, dataset, folds, rand);
+//        eval.crossValidateModel(classifier, dataset, folds, rand); //cross validation
+//        System.out.println(eval.toSummaryString("Evaluation results ("+folds+" fold cross validation)\n", false));
+//        if(dataset.classAttribute().isNominal()) {
+//            System.out.println(eval.toClassDetailsString());
+//            System.out.println(eval.fMeasure(1) + " "+eval.precision(1)+" "+eval.recall(1));
+//            System.out.println(eval.toMatrixString());
+//        }
+        for(int i=0;i<dataset.numClasses();i++){
+            for(int j=0;j<dataset.numClasses();j++){
+                System.out.println(temp[i][j]); 
+            }
         }
     }
     
