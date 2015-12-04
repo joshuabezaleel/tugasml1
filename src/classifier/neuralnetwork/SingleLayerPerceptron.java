@@ -5,6 +5,7 @@
  */
 package classifier.neuralnetwork;
 
+import explorer.WekaProcessor;
 import java.io.File;
 import java.io.IOException;
 import static java.lang.Double.compare;
@@ -21,6 +22,8 @@ import weka.core.Attribute;
 import weka.core.Capabilities;
 import weka.core.Capabilities.Capability;
 import weka.core.converters.ArffLoader;
+import weka.core.converters.ConverterUtils;
+import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
 import weka.filters.unsupervised.attribute.Normalize;
@@ -388,26 +391,30 @@ public class SingleLayerPerceptron extends Classifier {
     }
     
     public static void main(String[] args) throws Exception {
-        String dataset = "data/data_train/weather.nominal.arff";
+        String dataset = "data/Zoo/zoo.data";
 
-        Instances data = loadDatasetArff(dataset);
+        Instances data = DataSource.read(dataset);
         data.setClass(data.attribute(data.numAttributes() - 1));
 
         SingleLayerPerceptron ptr = new SingleLayerPerceptron();
-        ptr.setLearningRate(0.1);
-        ptr.setThreshold(0.01);
-        ptr.setMaxIteration(10);
+        ptr.setLearningRate(0.3);
+        ptr.setThreshold(20);
+        ptr.setMaxIteration(500);
         ptr.setInitialWeight(0.0);
         ptr.setIsNormalize(true);
         ptr.setAlgorithm(1);
 
-        ptr.buildClassifier(data);		
+//        ptr.buildClassifier(data);		
+        WekaProcessor processor = new WekaProcessor();
+        processor.readDataset(dataset);
+        processor.buildClassifier(ptr);
+        processor.nFoldCross_Eval(10);
+        
+//        System.out.println(ptr);
 
-        System.out.println(ptr);
-
-        Evaluation eval = new Evaluation(data);
-        eval.evaluateModel(ptr, data);
-        System.out.println(eval.toSummaryString());
+//        Evaluation eval = new Evaluation(data);
+//        eval.evaluateModel(ptr, data);
+//        System.out.println(eval.toSummaryString());
     }
     
 }

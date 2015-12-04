@@ -33,14 +33,14 @@ public class MyMLP extends Classifier {
     private int maxEpoch;
     
     public MyMLP() {
-        threshold = 1.0;
+        threshold = 20;
         givenWeight = 0.0;
-        learningRate = 0.1;
-        momentum = 0.0;
+        learningRate = 0.3;
+        momentum = 0.2;
         nbLayer = 1;
         nbNeuron = new int[nbLayer+1];
-        nbNeuron[0] = 2;
-        maxEpoch = 10;
+        nbNeuron[0] = 5;
+        maxEpoch = 500;
         randomWeight = false;
     }
     
